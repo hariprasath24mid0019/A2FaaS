@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-
 import {
   Activity,
   ArrowUpRight,
@@ -28,7 +27,6 @@ import {
   UserRound,
   Zap,
 } from "lucide-react";
-
 import "./App.css";
 import FirewallPage from "./FirewallPage";
 import TrafficPage from "./TrafficPage";
@@ -53,7 +51,6 @@ const apiFetch = async (path, options = {}) => {
 
   for (const base of getApiBases()) {
     const controller = new AbortController();
-
     const timeoutId = window.setTimeout(
       () => controller.abort(),
       6000
@@ -61,7 +58,6 @@ const apiFetch = async (path, options = {}) => {
 
     try {
       const separator = path.includes("?") ? "&" : "?";
-
       const response = await fetch(
         `${base}${path}${separator}t=${Date.now()}`,
         {
@@ -142,8 +138,7 @@ const ML_METRICS = {
 };
 
 function App() {
-  const [activePage, setActivePage] =
-    useState("Overview");
+  const [activePage, setActivePage] = useState("Overview");
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const [systemHealth, setSystemHealth] = useState({
@@ -151,23 +146,19 @@ function App() {
     message: "Checking backend connection...",
   });
 
-  const [dashboardStats, setDashboardStats] =
-    useState({
-      total_requests: 0,
-      allowed_requests: 0,
-      challenged_requests: 0,
-      blocked_requests: 0,
-      high_risk_requests: 0,
-    });
+  const [dashboardStats, setDashboardStats] = useState({
+    total_requests: 0,
+    allowed_requests: 0,
+    challenged_requests: 0,
+    blocked_requests: 0,
+    high_risk_requests: 0,
+  });
 
-  const [statsLoading, setStatsLoading] =
-    useState(true);
+  const [statsLoading, setStatsLoading] = useState(true);
 
   const checkSystemHealth = async () => {
     try {
-      const data = await apiFetch(
-        "/api/system/health"
-      );
+      const data = await apiFetch("/api/system/health");
 
       const status = String(
         data?.status || "healthy"
@@ -175,9 +166,7 @@ function App() {
 
       setSystemHealth({
         status,
-        message:
-          data?.message ||
-          "Backend is healthy",
+        message: data?.message || "Backend is healthy",
       });
 
       return [
@@ -187,10 +176,7 @@ function App() {
         "online",
       ].includes(status);
     } catch (error) {
-      console.error(
-        "Health check failed:",
-        error
-      );
+      console.error("Health check failed:", error);
 
       setSystemHealth({
         status: "offline",
@@ -208,21 +194,14 @@ function App() {
     try {
       setStatsLoading(true);
 
-      const data = await apiFetch(
-        "/api/dashboard/stats"
-      );
+      const data = await apiFetch("/api/dashboard/stats");
 
       setDashboardStats({
-        total_requests:
-          data?.total_requests ?? 0,
-        allowed_requests:
-          data?.allowed_requests ?? 0,
-        challenged_requests:
-          data?.challenged_requests ?? 0,
-        blocked_requests:
-          data?.blocked_requests ?? 0,
-        high_risk_requests:
-          data?.high_risk_requests ?? 0,
+        total_requests: data?.total_requests ?? 0,
+        allowed_requests: data?.allowed_requests ?? 0,
+        challenged_requests: data?.challenged_requests ?? 0,
+        blocked_requests: data?.blocked_requests ?? 0,
+        high_risk_requests: data?.high_risk_requests ?? 0,
       });
 
       return true;
@@ -263,39 +242,18 @@ function App() {
   useEffect(() => {
     refreshSystem();
 
-    const interval = setInterval(
-      refreshSystem,
-      30000
-    );
+    const interval = setInterval(refreshSystem, 30000);
 
-    const handleFocus = () =>
-      refreshSystem();
+    const handleFocus = () => refreshSystem();
+    const handleOnline = () => refreshSystem();
 
-    const handleOnline = () =>
-      refreshSystem();
-
-    window.addEventListener(
-      "focus",
-      handleFocus
-    );
-
-    window.addEventListener(
-      "online",
-      handleOnline
-    );
+    window.addEventListener("focus", handleFocus);
+    window.addEventListener("online", handleOnline);
 
     return () => {
       clearInterval(interval);
-
-      window.removeEventListener(
-        "focus",
-        handleFocus
-      );
-
-      window.removeEventListener(
-        "online",
-        handleOnline
-      );
+      window.removeEventListener("focus", handleFocus);
+      window.removeEventListener("online", handleOnline);
     };
   }, []);
 
@@ -303,13 +261,11 @@ function App() {
     systemHealth.status === "healthy" ||
     systemHealth.status === "operational";
 
-  const isChecking =
-    systemHealth.status === "checking";
+  const isChecking = systemHealth.status === "checking";
 
   const handleNavigation = (label) => {
     setActivePage(label);
     setSidebarOpen(false);
-
     window.scrollTo({
       top: 0,
       behavior: "smooth",
@@ -326,20 +282,19 @@ function App() {
           onClick={() => setSidebarOpen(false)}
         />
       )}
-      <aside className={`sidebar ${sidebarOpen ? "sidebar-open" : ""}`}>
+
+      <aside
+        className={`sidebar ${
+          sidebarOpen ? "sidebar-open" : ""
+        }`}
+      >
         <div className="brand">
           <div className="brand-mark">
-            <ShieldCheck
-              size={23}
-              strokeWidth={2.2}
-            />
+            <ShieldCheck size={23} strokeWidth={2.2} />
           </div>
 
           <div>
-            <div className="brand-name">
-              A²FaaS
-            </div>
-
+            <div className="brand-name">A²FaaS</div>
             <div className="brand-subtitle">
               Adaptive Cloud Security
             </div>
@@ -354,29 +309,19 @@ function App() {
           <nav className="navigation">
             {navigation.map((item) => {
               const Icon = item.icon;
-
-              const active =
-                activePage === item.label;
+              const active = activePage === item.label;
 
               return (
                 <button
                   key={item.label}
                   type="button"
-                  onClick={() =>
-                    handleNavigation(
-                      item.label
-                    )
-                  }
+                  onClick={() => handleNavigation(item.label)}
                   className={`nav-item ${
                     active ? "active" : ""
                   }`}
                 >
                   <Icon size={18} />
-
-                  <span>
-                    {item.label}
-                  </span>
-
+                  <span>{item.label}</span>
                   {active && (
                     <span className="nav-indicator" />
                   )}
@@ -407,13 +352,8 @@ function App() {
                   </div>
 
                   <div className="system-copy">
-                    <span>
-                      {item.label}
-                    </span>
-
-                    <small>
-                      {item.status}
-                    </small>
+                    <span>{item.label}</span>
+                    <small>{item.status}</small>
                   </div>
 
                   <span className="system-dot" />
@@ -430,9 +370,13 @@ function App() {
             <button
               className="menu-button"
               type="button"
-              aria-label={sidebarOpen ? "Close menu" : "Open menu"}
+              aria-label={
+                sidebarOpen ? "Close menu" : "Open menu"
+              }
               aria-expanded={sidebarOpen}
-              onClick={() => setSidebarOpen((open) => !open)}
+              onClick={() =>
+                setSidebarOpen((open) => !open)
+              }
             >
               <Menu size={19} />
             </button>
@@ -441,9 +385,9 @@ function App() {
               <div className="topbar-title">
                 A²FaaS Security Console
               </div>
-
               <div className="topbar-subtitle">
-                Adaptive firewall · ML risk intelligence · Zero Trust
+                Adaptive firewall · ML risk intelligence ·
+                Zero Trust
               </div>
             </div>
           </div>
@@ -454,17 +398,16 @@ function App() {
                 isOperational
                   ? "online"
                   : isChecking
-                  ? "checking"
-                  : "offline"
+                    ? "checking"
+                    : "offline"
               }`}
             >
               <span className="connection-dot" />
-
               {isChecking
                 ? "Checking systems"
                 : isOperational
-                ? "All systems normal"
-                : "Service unavailable"}
+                  ? "All systems normal"
+                  : "Service unavailable"}
             </div>
 
             <button
@@ -496,23 +439,15 @@ function App() {
           <OverviewPage
             dashboardStats={dashboardStats}
             statsLoading={statsLoading}
-            onAnalyze={() =>
-              handleNavigation("Firewall")
-            }
+            onAnalyze={() => handleNavigation("Firewall")}
           />
         )}
 
-        {activePage === "ML Engine" && (
-          <MLEnginePage />
-        )}
+        {activePage === "ML Engine" && <MLEnginePage />}
 
-        {activePage === "Firewall" && (
-          <FirewallPage />
-        )}
+        {activePage === "Firewall" && <FirewallPage />}
 
-        {activePage === "Traffic" && (
-          <TrafficPage />
-        )}
+        {activePage === "Traffic" && <TrafficPage />}
 
         {activePage === "Zero Trust" && (
           <PlaceholderPage
@@ -539,6 +474,7 @@ function OverviewPage({
       value: 0,
     }))
   );
+
   const [activityTotal, setActivityTotal] = useState(0);
   const [activityLoading, setActivityLoading] = useState(true);
   const [activityError, setActivityError] = useState("");
@@ -548,27 +484,40 @@ function OverviewPage({
     let requestInProgress = false;
 
     const parseEventTimestamp = (raw) => {
-      if (raw === undefined || raw === null || raw === "") return NaN;
+      if (raw === undefined || raw === null || raw === "") {
+        return NaN;
+      }
 
       // Epoch timestamps can arrive in seconds or milliseconds.
-      if (typeof raw === "number" || /^\d{10,13}$/.test(String(raw).trim())) {
+      if (
+        typeof raw === "number" ||
+        /^\d{10,13}$/.test(String(raw).trim())
+      ) {
         const numeric = Number(raw);
         return numeric < 1e12 ? numeric * 1000 : numeric;
       }
 
       const value = String(raw).trim();
+
       // ISO timestamps with Z/offset are parsed as absolute instants.
       const parsed = Date.parse(value);
       if (Number.isFinite(parsed)) return parsed;
 
-      // SQLite "YYYY-MM-DD HH:mm:ss" is treated as local time if it has no zone.
+      // SQLite timestamps without a timezone are treated as local time.
       const sqliteMatch = value.match(
-        /^(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2}:\d{2}(?:\\.\d+)?)(?:\\s*(Z|[+-]\d{2}:?\d{2}))?$/i
+        /^(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2}:\d{2}(?:\.\d+)?)(?:\s*(Z|[+-]\d{2}:?\d{2}))?$/i
       );
+
       if (!sqliteMatch) return NaN;
-      const normalized = `${sqliteMatch[1]}T${sqliteMatch[2]}${sqliteMatch[3] || ""}`;
+
+      const normalized =
+        `${sqliteMatch[1]}T${sqliteMatch[2]}${sqliteMatch[3] || ""}`;
+
       const sqliteParsed = Date.parse(normalized);
-      return Number.isFinite(sqliteParsed) ? sqliteParsed : NaN;
+
+      return Number.isFinite(sqliteParsed)
+        ? sqliteParsed
+        : NaN;
     };
 
     const loadActivity = async () => {
@@ -576,7 +525,10 @@ function OverviewPage({
       requestInProgress = true;
 
       try {
-        const response = await apiFetch("/api/requests/recent?limit=100");
+        const response = await apiFetch(
+          "/api/requests/recent?limit=100"
+        );
+
         const events = Array.isArray(response)
           ? response
           : [
@@ -598,32 +550,47 @@ function OverviewPage({
         for (const event of events) {
           const timestamp = parseEventTimestamp(
             event?.timestamp ??
-            event?.created_at ??
-            event?.event_timestamp ??
-            event?.request_timestamp ??
-            event?.created ??
-            event?.time ??
-            event?.date
+              event?.created_at ??
+              event?.event_timestamp ??
+              event?.request_timestamp ??
+              event?.created ??
+              event?.time ??
+              event?.date
           );
 
           if (!Number.isFinite(timestamp)) continue;
-          if (timestamp < windowStart || timestamp > now + 60_000) continue;
+          if (
+            timestamp < windowStart ||
+            timestamp > now + 60_000
+          ) {
+            continue;
+          }
 
           const bucket = Math.min(
             counts.length - 1,
-            Math.max(0, Math.floor((timestamp - windowStart) / bucketDuration))
+            Math.max(
+              0,
+              Math.floor(
+                (timestamp - windowStart) / bucketDuration
+              )
+            )
           );
+
           counts[bucket] += 1;
           counted += 1;
         }
 
         const formattedBuckets = counts.map((value, index) => {
-          const bucketStart = new Date(windowStart + index * bucketDuration);
+          const bucketStart = new Date(
+            windowStart + index * bucketDuration
+          );
+
           const label = bucketStart.toLocaleTimeString([], {
             hour: "2-digit",
             minute: "2-digit",
             hour12: false,
           });
+
           return { time: label, value };
         });
 
@@ -633,9 +600,15 @@ function OverviewPage({
           setActivityError("");
         }
       } catch (error) {
-        console.error("Unable to load request activity:", error);
+        console.error(
+          "Unable to load request activity:",
+          error
+        );
+
         if (!cancelled) {
-          setActivityError("Request activity could not be loaded. Check the backend connection.");
+          setActivityError(
+            "Request activity could not be loaded. Check the backend connection."
+          );
         }
       } finally {
         requestInProgress = false;
@@ -644,7 +617,12 @@ function OverviewPage({
     };
 
     loadActivity();
-    const intervalId = window.setInterval(loadActivity, 15000);
+
+    const intervalId = window.setInterval(
+      loadActivity,
+      15000
+    );
+
     const handleFocus = () => loadActivity();
     window.addEventListener("focus", handleFocus);
 
@@ -655,7 +633,10 @@ function OverviewPage({
     };
   }, []);
 
-  const chartMax = Math.max(5, ...activityData.map((item) => item.value));
+  const chartMax = Math.max(
+    5,
+    ...activityData.map((item) => item.value)
+  );
 
   return (
     <div className="page-content">
@@ -666,14 +647,11 @@ function OverviewPage({
             CLOUD SECURITY INTELLIGENCE
           </div>
 
-          <h1>
-            Adaptive Firewall Overview
-          </h1>
+          <h1>Adaptive Firewall Overview</h1>
 
           <p>
-            Real-time visibility into traffic
-            risk, ML decisions, and Zero Trust
-            enforcement.
+            Real-time visibility into traffic risk, ML
+            decisions, and Zero Trust enforcement.
           </p>
         </div>
 
@@ -683,14 +661,17 @@ function OverviewPage({
             type="button"
             onClick={() => {
               const apiBase = getApiBases()[0];
-              window.open(`${apiBase}/docs`, "_blank", "noopener,noreferrer");
+              window.open(
+                `${apiBase}/docs`,
+                "_blank",
+                "noopener,noreferrer"
+              );
             }}
           >
             <TerminalSquare size={16} />
             API Console
           </button>
 
-          {/* FIXED: Analyze Request now navigates to Firewall */}
           <button
             className="primary-button"
             type="button"
@@ -708,14 +689,11 @@ function OverviewPage({
         </div>
 
         <div className="banner-content">
-          <strong>
-            Adaptive protection is active
-          </strong>
-
+          <strong>Adaptive protection is active</strong>
           <span>
-            A²FaaS is continuously evaluating
-            application traffic using ML risk
-            scoring and Zero Trust verification.
+            A²FaaS is continuously evaluating application
+            traffic using ML risk scoring and Zero Trust
+            verification.
           </span>
         </div>
 
@@ -730,9 +708,7 @@ function OverviewPage({
           icon={Globe2}
           label="TOTAL REQUESTS"
           value={
-            statsLoading
-              ? "..."
-              : dashboardStats.total_requests
+            statsLoading ? "..." : dashboardStats.total_requests
           }
           description="Requests evaluated by A²FaaS"
           tone="blue"
@@ -782,10 +758,7 @@ function OverviewPage({
               <div className="card-eyebrow">
                 TRAFFIC ACTIVITY
               </div>
-
-              <h2>
-                Request Activity
-              </h2>
+              <h2>Request Activity</h2>
             </div>
 
             <div className="live-badge">
@@ -812,27 +785,56 @@ function OverviewPage({
                 <span />
               </div>
 
-              <div className="chart-bars" role="img" aria-label={`Request activity over the last 24 hours: ${activityTotal} recorded requests in the latest 100 events`}>
+              <div
+                className="chart-bars"
+                role="img"
+                aria-label={`Request activity over the last 24 hours: ${activityTotal} recorded requests in the latest 100 events`}
+              >
                 {activityData.map((item) => (
-                  <div className="chart-bar-column" key={item.time}>
-                    <span className="chart-bar-value">{item.value}</span>
+                  <div
+                    className="chart-bar-column"
+                    key={item.time}
+                  >
+                    <span className="chart-bar-value">
+                      {item.value}
+                    </span>
+
                     <div className="chart-bar-track">
                       <div
                         className="chart-bar"
-                        style={{ height: `${item.value === 0 ? 0 : Math.max(8, (item.value / chartMax) * 100)}%` }}
+                        style={{
+                          height: `${
+                            item.value === 0
+                              ? 0
+                              : Math.max(
+                                  8,
+                                  (item.value / chartMax) * 100
+                                )
+                          }%`,
+                        }}
                         title={`${item.value} requests ${item.time}`}
                       />
                     </div>
-                    <span className="chart-bar-label">{item.time}</span>
+
+                    <span className="chart-bar-label">
+                      {item.time}
+                    </span>
                   </div>
                 ))}
               </div>
             </div>
           </div>
-          <div className={`activity-footnote ${activityError ? "error" : ""}`} aria-live="polite">
-            {activityError || (activityLoading
-              ? "Loading request activity…"
-              : `${activityTotal} requests recorded in the last 24 hours · refreshed every 15 seconds`)}
+
+          <div
+            className={`activity-footnote ${
+              activityError ? "error" : ""
+            }`}
+            aria-live="polite"
+          >
+            {activityError ||
+              (activityLoading
+                ? "Loading request activity…"
+                : `${activityTotal} requests recorded in the last 24 hours · refreshed every 15 seconds`)}
           </div>
         </div>
 
@@ -842,10 +844,7 @@ function OverviewPage({
               <div className="card-eyebrow">
                 DECISION DISTRIBUTION
               </div>
-
-              <h2>
-                Security Decisions
-              </h2>
+              <h2>Security Decisions</h2>
             </div>
 
             <BarChart3 size={19} />
@@ -853,37 +852,26 @@ function OverviewPage({
 
           <div className="decision-content">
             <div className="decision-total">
-              <strong>
-                {dashboardStats.total_requests}
-              </strong>
-
-              <span>
-                Requests evaluated
-              </span>
+              <strong>{dashboardStats.total_requests}</strong>
+              <span>Requests evaluated</span>
             </div>
 
             <div className="legend-list">
               <LegendItem
                 label="Allowed"
-                value={
-                  dashboardStats.allowed_requests
-                }
+                value={dashboardStats.allowed_requests}
                 type="allowed"
               />
 
               <LegendItem
                 label="Challenge"
-                value={
-                  dashboardStats.challenged_requests
-                }
+                value={dashboardStats.challenged_requests}
                 type="challenge"
               />
 
               <LegendItem
                 label="Blocked"
-                value={
-                  dashboardStats.blocked_requests
-                }
+                value={dashboardStats.blocked_requests}
                 type="blocked"
               />
             </div>
@@ -897,10 +885,7 @@ function OverviewPage({
             <div className="card-eyebrow">
               PROTECTION PIPELINE
             </div>
-
-            <h2>
-              Adaptive Security Architecture
-            </h2>
+            <h2>Adaptive Security Architecture</h2>
           </div>
 
           <span className="card-link">
@@ -953,10 +938,7 @@ function OverviewPage({
             <div className="card-eyebrow">
               SECURITY POSTURE
             </div>
-
-            <h2>
-              Current Protection Status
-            </h2>
+            <h2>Current Protection Status</h2>
           </div>
 
           <span className="protected-badge">
@@ -1009,13 +991,11 @@ function MLEnginePage() {
             MACHINE LEARNING SECURITY
           </div>
 
-          <h1>
-            ML Risk Engine
-          </h1>
+          <h1>ML Risk Engine</h1>
 
           <p>
-            Lightweight machine learning model
-            for adaptive network threat detection.
+            Lightweight machine learning model for adaptive
+            network threat detection.
           </p>
         </div>
 
@@ -1033,14 +1013,10 @@ function MLEnginePage() {
         </div>
 
         <div className="banner-content">
-          <strong>
-            {ML_METRICS.model}
-          </strong>
-
+          <strong>{ML_METRICS.model}</strong>
           <span>
-            Trained on {ML_METRICS.dataset}
-            with {ML_METRICS.features} extracted
-            traffic features.
+            Trained on {ML_METRICS.dataset} with{" "}
+            {ML_METRICS.features} extracted traffic features.
           </span>
         </div>
 
@@ -1091,10 +1067,7 @@ function MLEnginePage() {
               <div className="card-eyebrow">
                 MODEL INFORMATION
               </div>
-
-              <h2>
-                Risk Scoring Model
-              </h2>
+              <h2>Risk Scoring Model</h2>
             </div>
 
             <Cpu size={19} />
@@ -1126,13 +1099,8 @@ function MLEnginePage() {
         <div className="dashboard-card">
           <div className="card-header">
             <div>
-              <div className="card-eyebrow">
-                DATASET
-              </div>
-
-              <h2>
-                Training Distribution
-              </h2>
+              <div className="card-eyebrow">DATASET</div>
+              <h2>Training Distribution</h2>
             </div>
 
             <Server size={19} />
@@ -1145,11 +1113,7 @@ function MLEnginePage() {
               </div>
 
               <div className="dataset-bar">
-                <span
-                  style={{
-                    width: "32%",
-                  }}
-                />
+                <span style={{ width: "32%" }} />
               </div>
 
               <strong>
@@ -1163,11 +1127,7 @@ function MLEnginePage() {
               </div>
 
               <div className="dataset-bar">
-                <span
-                  style={{
-                    width: "68%",
-                  }}
-                />
+                <span style={{ width: "68%" }} />
               </div>
 
               <strong>
@@ -1181,13 +1141,8 @@ function MLEnginePage() {
       <section className="dashboard-card">
         <div className="card-header">
           <div>
-            <div className="card-eyebrow">
-              MODEL PIPELINE
-            </div>
-
-            <h2>
-              ML Processing Flow
-            </h2>
+            <div className="card-eyebrow">MODEL PIPELINE</div>
+            <h2>ML Processing Flow</h2>
           </div>
         </div>
 
@@ -1232,13 +1187,8 @@ function MLEnginePage() {
       <section className="dashboard-card">
         <div className="card-header">
           <div>
-            <div className="card-eyebrow">
-              PERFORMANCE
-            </div>
-
-            <h2>
-              Model Evaluation
-            </h2>
+            <div className="card-eyebrow">PERFORMANCE</div>
+            <h2>Model Evaluation</h2>
           </div>
         </div>
 
@@ -1271,13 +1221,8 @@ function MLEnginePage() {
 function MLInfoBox({ label, value }) {
   return (
     <div className="info-box">
-      <span>
-        {label}
-      </span>
-
-      <strong>
-        {value}
-      </strong>
+      <span>{label}</span>
+      <strong>{value}</strong>
     </div>
   );
 }
@@ -1290,48 +1235,30 @@ function PipelineStep({
 }) {
   return (
     <div className="pipeline-step">
-      <div className="pipeline-number">
-        {number}
-      </div>
+      <div className="pipeline-number">{number}</div>
 
       <div className="pipeline-icon">
         <Icon size={18} />
       </div>
 
       <div className="pipeline-copy">
-        <strong>
-          {title}
-        </strong>
-
-        <span>
-          {description}
-        </span>
+        <strong>{title}</strong>
+        <span>{description}</span>
       </div>
     </div>
   );
 }
 
-function PerformanceRow({
-  metric,
-  value,
-}) {
+function PerformanceRow({ metric, value }) {
   return (
     <div className="performance-row">
-      <span>
-        {metric}
-      </span>
+      <span>{metric}</span>
 
       <div className="performance-bar">
-        <span
-          style={{
-            width: `${value}%`,
-          }}
-        />
+        <span style={{ width: `${value}%` }} />
       </div>
 
-      <strong>
-        {value}%
-      </strong>
+      <strong>{value}%</strong>
     </div>
   );
 }
@@ -1352,13 +1279,8 @@ function PlaceholderPage({
             {eyebrow}
           </div>
 
-          <h1>
-            {title}
-          </h1>
-
-          <p>
-            {description}
-          </p>
+          <h1>{title}</h1>
+          <p>{description}</p>
         </div>
       </section>
 
@@ -1446,9 +1368,7 @@ function MetricCard({
   tone,
 }) {
   return (
-    <div
-      className={`metric-card ${tone}`}
-    >
+    <div className={`metric-card ${tone}`}>
       <div className="metric-top">
         <div className="metric-icon">
           <Icon size={18} />
@@ -1460,39 +1380,19 @@ function MetricCard({
         </span>
       </div>
 
-      <div className="metric-label">
-        {label}
-      </div>
-
-      <div className="metric-value">
-        {value}
-      </div>
-
-      <div className="metric-description">
-        {description}
-      </div>
+      <div className="metric-label">{label}</div>
+      <div className="metric-value">{value}</div>
+      <div className="metric-description">{description}</div>
     </div>
   );
 }
 
-function LegendItem({
-  label,
-  value,
-  type,
-}) {
+function LegendItem({ label, value, type }) {
   return (
     <div className="legend-item">
-      <div
-        className={`legend-dot ${type}`}
-      />
-
-      <span>
-        {label}
-      </span>
-
-      <strong>
-        {value}
-      </strong>
+      <div className={`legend-dot ${type}`} />
+      <span>{label}</span>
+      <strong>{value}</strong>
     </div>
   );
 }
@@ -1510,20 +1410,14 @@ function PostureItem({
       </div>
 
       <div className="posture-copy">
-        <strong>
-          {title}
-        </strong>
-
-        <span>
-          {description}
-        </span>
+        <strong>{title}</strong>
+        <span>{description}</span>
       </div>
 
       <div className="posture-status">
         <span className="posture-check">
           <CheckCircle2 size={13} />
         </span>
-
         {status}
       </div>
     </div>
