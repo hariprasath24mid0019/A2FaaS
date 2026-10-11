@@ -53,7 +53,7 @@ const apiFetch = async (path, options = {}) => {
     const controller = new AbortController();
     const timeoutId = window.setTimeout(
       () => controller.abort(),
-      6000
+      20000
     );
 
     try {
