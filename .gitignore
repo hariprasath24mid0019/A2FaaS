@@ -41,3 +41,9 @@ docker-data/
 
 # ML generated artifacts
 ml/__pycache__/
+# Local virtual environment archive
+.venv.zip
+
+# Local secrets and private keys
+*.pem
+*.key

@@ -18,18 +18,20 @@ import {
 const REQUEST_TIMEOUT = 6000;
 
 function getApiCandidates() {
-  if (typeof window === "undefined") {
-    return ["http://127.0.0.1:8000", "http://localhost:8000"];
+  const configuredApi = (
+    import.meta.env.VITE_API_URL || ""
+  )
+    .trim()
+    .replace(/\/+$/, "");
+
+  if (configuredApi) {
+    return [configuredApi];
   }
 
-  const host = window.location.hostname || "localhost";
-  const protocol = window.location.protocol || "http:";
-
   return [
-    `${protocol}//${host}:8000`,
     "http://127.0.0.1:8000",
     "http://localhost:8000",
-  ].filter((value, index, array) => array.indexOf(value) === index);
+  ];
 }
 
 async function apiFetch(path) {

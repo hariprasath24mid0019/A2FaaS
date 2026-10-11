@@ -1,91 +1,67 @@
 import { useEffect, useMemo, useState } from "react";
 
-
-
 import {
-
-  Activity,
-
-  ArrowUpRight,
-
-  BarChart3,
-
-  Bell,
-
-  CheckCircle2,
-
-  ChevronDown,
-
-  CircleDot,
-
-  Cloud,
-
-  Cpu,
-
-  FileWarning,
-
-  Fingerprint,
-
-  Gauge,
-
-  Globe2,
-
-  Info,
-
-  LockKeyhole,
-
-  Menu,
-
-  Network,
-
-  Radar,
-
-  RefreshCw,
-
-  Server,
-
-  Shield,
-
-  ShieldAlert,
-
-  ShieldCheck,
-
-  TerminalSquare,
-
-  UserRound,
-
-  Zap,
-
+  Activity,
+  ArrowUpRight,
+  BarChart3,
+  Bell,
+  CheckCircle2,
+  ChevronDown,
+  CircleDot,
+  Cloud,
+  Cpu,
+  FileWarning,
+  Fingerprint,
+  Gauge,
+  Globe2,
+  Info,
+  LockKeyhole,
+  Menu,
+  Network,
+  Radar,
+  RefreshCw,
+  Server,
+  Shield,
+  ShieldAlert,
+  ShieldCheck,
+  TerminalSquare,
+  UserRound,
+  Zap,
 } from "lucide-react";
-
-
 
 import "./App.css";
 import FirewallPage from "./FirewallPage";
 import TrafficPage from "./TrafficPage";
 
-
-
 const getApiBases = () => {
-  if (typeof window === "undefined") {
-    return ["http://127.0.0.1:8000", "http://localhost:8000"];
+  const configuredApi = (import.meta.env.VITE_API_URL || "")
+    .trim()
+    .replace(/\/+$/, "");
+
+  if (configuredApi) {
+    return [configuredApi];
   }
-  const protocol = window.location.protocol || "http:";
-  const hostname = window.location.hostname || "localhost";
+
   return [
-    `${protocol}//${hostname}:8000`,
     "http://127.0.0.1:8000",
     "http://localhost:8000",
-  ].filter((value, index, array) => array.indexOf(value) === index);
+  ];
 };
 
 const apiFetch = async (path, options = {}) => {
   let lastError = null;
+
   for (const base of getApiBases()) {
     const controller = new AbortController();
-    const timeoutId = window.setTimeout(() => controller.abort(), 6000);
+
+    const timeoutId = window.setTimeout(
+      () => controller.abort(),
+      6000
+    );
+
     try {
       const separator = path.includes("?") ? "&" : "?";
+
       const response = await fetch(
         `${base}${path}${separator}t=${Date.now()}`,
         {
@@ -99,7 +75,11 @@ const apiFetch = async (path, options = {}) => {
           signal: controller.signal,
         }
       );
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
       return await response.json();
     } catch (error) {
       lastError = error;
@@ -107,172 +87,111 @@ const apiFetch = async (path, options = {}) => {
       window.clearTimeout(timeoutId);
     }
   }
-  throw lastError || new Error("Backend connection unavailable");
+
+  throw (
+    lastError ||
+    new Error("Backend connection unavailable")
+  );
 };
-
-
 
 const navigation = [
-
-  { label: "Overview", icon: Gauge },
-
-  { label: "Firewall", icon: Shield },
-
-  { label: "Traffic", icon: Activity },
-
-  { label: "ML Engine", icon: Cpu },
-
-  { label: "Zero Trust", icon: LockKeyhole },
-
+  { label: "Overview", icon: Gauge },
+  { label: "Firewall", icon: Shield },
+  { label: "Traffic", icon: Activity },
+  { label: "ML Engine", icon: Cpu },
+  { label: "Zero Trust", icon: LockKeyhole },
 ];
-
-
 
 const systemItems = [
-
-  {
-
-    label: "Cloud Application",
-
-    status: "Protected",
-
-    icon: Cloud,
-
-  },
-
-  {
-
-    label: "Traffic Interceptor",
-
-    status: "Online",
-
-    icon: Network,
-
-  },
-
-  {
-
-    label: "ML Risk Engine",
-
-    status: "Ready",
-
-    icon: Cpu,
-
-  },
-
-  {
-
-    label: "Zero Trust Policy",
-
-    status: "Enforced",
-
-    icon: Fingerprint,
-
-  },
-
+  {
+    label: "Cloud Application",
+    status: "Protected",
+    icon: Cloud,
+  },
+  {
+    label: "Traffic Interceptor",
+    status: "Online",
+    icon: Network,
+  },
+  {
+    label: "ML Risk Engine",
+    status: "Ready",
+    icon: Cpu,
+  },
+  {
+    label: "Zero Trust Policy",
+    status: "Enforced",
+    icon: Fingerprint,
+  },
 ];
-
-
-
-const activityData = [
-
-  { time: "00:00", value: 0 },
-
-  { time: "04:00", value: 0 },
-
-  { time: "08:00", value: 0 },
-
-  { time: "12:00", value: 0 },
-
-  { time: "16:00", value: 0 },
-
-  { time: "20:00", value: 0 },
-
-  { time: "24:00", value: 0 },
-
-];
-
-
 
 const ML_METRICS = {
-
-  model: "Logistic Regression",
-
-  dataset: "UNSW-NB15",
-
-  features: 42,
-
-  accuracy: 93.23,
-
-  precision: 95.0,
-
-  recall: 95.06,
-
-  f1: 95.03,
-
-  predictionTime: 103.7,
-
-  trainingTime: 4.42,
-
-  normalSamples: 56000,
-
-  attackSamples: 119341,
-
-  trainingSamples: 140272,
-
-  validationSamples: 35069,
-
+  model: "Logistic Regression",
+  dataset: "UNSW-NB15",
+  features: 42,
+  accuracy: 93.23,
+  precision: 95.0,
+  recall: 95.06,
+  f1: 95.03,
+  averagePredictionLatencyMs: 0.0029583563826577302,
+  trainingTime: 3.4093404000159353,
+  normalSamples: 56000,
+  attackSamples: 119341,
+  trainingSamples: 140272,
+  validationSamples: 35069,
 };
 
-
-
 function App() {
+  const [activePage, setActivePage] =
+    useState("Overview");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const [activePage, setActivePage] = useState("Overview");
+  const [systemHealth, setSystemHealth] = useState({
+    status: "checking",
+    message: "Checking backend connection...",
+  });
 
+  const [dashboardStats, setDashboardStats] =
+    useState({
+      total_requests: 0,
+      allowed_requests: 0,
+      challenged_requests: 0,
+      blocked_requests: 0,
+      high_risk_requests: 0,
+    });
 
-
-  const [systemHealth, setSystemHealth] = useState({
-
-    status: "checking",
-
-    message: "Checking backend connection...",
-
-  });
-
-
-
-  const [dashboardStats, setDashboardStats] = useState({
-
-    total_requests: 0,
-
-    allowed_requests: 0,
-
-    challenged_requests: 0,
-
-    blocked_requests: 0,
-
-    high_risk_requests: 0,
-
-  });
-
-
-
-  const [statsLoading, setStatsLoading] = useState(true);
-
-
+  const [statsLoading, setStatsLoading] =
+    useState(true);
 
   const checkSystemHealth = async () => {
     try {
-      const data = await apiFetch("/api/system/health");
-      const status = String(data?.status || "healthy").toLowerCase();
+      const data = await apiFetch(
+        "/api/system/health"
+      );
+
+      const status = String(
+        data?.status || "healthy"
+      ).toLowerCase();
+
       setSystemHealth({
         status,
-        message: data?.message || "Backend is healthy",
+        message:
+          data?.message ||
+          "Backend is healthy",
       });
-      return ["healthy", "operational", "ok", "online"].includes(status);
+
+      return [
+        "healthy",
+        "operational",
+        "ok",
+        "online",
+      ].includes(status);
     } catch (error) {
-      console.error("Health check failed:", error);
+      console.error(
+        "Health check failed:",
+        error
+      );
+
       setSystemHealth({
         status: "offline",
         message:
@@ -280,6 +199,7 @@ function App() {
             ? "Backend health check timed out"
             : "Backend connection unavailable",
       });
+
       return false;
     }
   };
@@ -287,17 +207,31 @@ function App() {
   const fetchDashboardStats = async () => {
     try {
       setStatsLoading(true);
-      const data = await apiFetch("/api/dashboard/stats");
+
+      const data = await apiFetch(
+        "/api/dashboard/stats"
+      );
+
       setDashboardStats({
-        total_requests: data?.total_requests ?? 0,
-        allowed_requests: data?.allowed_requests ?? 0,
-        challenged_requests: data?.challenged_requests ?? 0,
-        blocked_requests: data?.blocked_requests ?? 0,
-        high_risk_requests: data?.high_risk_requests ?? 0,
+        total_requests:
+          data?.total_requests ?? 0,
+        allowed_requests:
+          data?.allowed_requests ?? 0,
+        challenged_requests:
+          data?.challenged_requests ?? 0,
+        blocked_requests:
+          data?.blocked_requests ?? 0,
+        high_risk_requests:
+          data?.high_risk_requests ?? 0,
       });
+
       return true;
     } catch (error) {
-      console.error("Unable to fetch dashboard statistics:", error);
+      console.error(
+        "Unable to fetch dashboard statistics:",
+        error
+      );
+
       return false;
     } finally {
       setStatsLoading(false);
@@ -309,10 +243,15 @@ function App() {
       checkSystemHealth(),
       fetchDashboardStats(),
     ]);
+
     const healthOk =
-      results[0]?.status === "fulfilled" && results[0]?.value === true;
+      results[0]?.status === "fulfilled" &&
+      results[0]?.value === true;
+
     const statsOk =
-      results[1]?.status === "fulfilled" && results[1]?.value === true;
+      results[1]?.status === "fulfilled" &&
+      results[1]?.value === true;
+
     if (!healthOk && statsOk) {
       setSystemHealth({
         status: "healthy",
@@ -323,3414 +262,1272 @@ function App() {
 
   useEffect(() => {
     refreshSystem();
-    const interval = setInterval(refreshSystem, 30000);
-    const handleFocus = () => refreshSystem();
-    const handleOnline = () => refreshSystem();
-    window.addEventListener("focus", handleFocus);
-    window.addEventListener("online", handleOnline);
+
+    const interval = setInterval(
+      refreshSystem,
+      30000
+    );
+
+    const handleFocus = () =>
+      refreshSystem();
+
+    const handleOnline = () =>
+      refreshSystem();
+
+    window.addEventListener(
+      "focus",
+      handleFocus
+    );
+
+    window.addEventListener(
+      "online",
+      handleOnline
+    );
+
     return () => {
       clearInterval(interval);
-      window.removeEventListener("focus", handleFocus);
-      window.removeEventListener("online", handleOnline);
+
+      window.removeEventListener(
+        "focus",
+        handleFocus
+      );
+
+      window.removeEventListener(
+        "online",
+        handleOnline
+      );
     };
   }, []);
 
-  const isOperational =
-
-    systemHealth.status === "healthy" ||
-
-    systemHealth.status === "operational";
-
-
-
-  const isChecking =
-
-    systemHealth.status === "checking";
-
-
-
-  const handleNavigation = (label) => {
-
-    setActivePage(label);
-
-    window.scrollTo({
-
-      top: 0,
-
-      behavior: "smooth",
-
-    });
-
-  };
-
-
-
-  return (
-
-    <div className="app-shell">
-
-      <aside className="sidebar">
-
-        <div className="brand">
-
-          <div className="brand-mark">
-
-            <ShieldCheck
-
-              size={23}
-
-              strokeWidth={2.2}
-
-            />
-
-          </div>
-
-
-
-          <div>
-
-            <div className="brand-name">
-
-              A²FaaS
-
-            </div>
-
-
-
-            <div className="brand-subtitle">
-
-              Adaptive Cloud Security
-
-            </div>
-
-          </div>
-
-        </div>
-
-
-
-        <div className="workspace">
-
-          <div className="workspace-label">
-
-            SECURITY CONSOLE
-
-          </div>
-
-
-
-          <nav className="navigation">
-
-            {navigation.map((item) => {
-
-              const Icon = item.icon;
-
-              const active =
-
-                activePage === item.label;
-
-
-
-              return (
-
-                <button
-
-                  key={item.label}
-
-                  type="button"
-
-                  onClick={() =>
-
-                    handleNavigation(item.label)
-
-                  }
-
-                  className={`nav-item ${
-
-                    active ? "active" : ""
-
-                  }`}
-
-                >
-
-                  <Icon size={18} />
-
-
-
-                  <span>{item.label}</span>
-
-
-
-                  {active && (
-
-                    <span className="nav-indicator" />
-
-                  )}
-
-                </button>
-
-              );
-
-            })}
-
-          </nav>
-
-        </div>
-
-
-
-        <div className="sidebar-divider" />
-
-
-
-        <div className="workspace">
-
-          <div className="workspace-label">
-
-            SYSTEM STATUS
-
-          </div>
-
-
-
-          <div className="system-list">
-
-            {systemItems.map((item) => {
-
-              const Icon = item.icon;
-
-
-
-              return (
-
-                <div
-
-                  className="system-item"
-
-                  key={item.label}
-
-                >
-
-                  <div className="system-icon">
-
-                    <Icon size={15} />
-
-                  </div>
-
-
-
-                  <div className="system-copy">
-
-                    <span>{item.label}</span>
-
-                    <small>{item.status}</small>
-
-                  </div>
-
-
-
-                  <span className="online-dot" />
-
-                </div>
-
-              );
-
-            })}
-
-          </div>
-
-        </div>
-
-
-
-        <div className="sidebar-bottom">
-
-          <div className="environment-card">
-
-            <div className="environment-top">
-
-              <span className="status-pulse" />
-
-              <span>DEVELOPMENT</span>
-
-            </div>
-
-
-
-            <div className="environment-description">
-
-              Local security environment
-
-            </div>
-
-          </div>
-
-
-
-          <div className="user-card">
-
-            <div className="avatar">
-
-              <UserRound size={17} />
-
-            </div>
-
-
-
-            <div className="user-details">
-
-              <strong>Security Admin</strong>
-
-              <span>Administrator</span>
-
-            </div>
-
-
-
-            <ChevronDown
-
-              size={16}
-
-              className="muted-icon"
-
-            />
-
-          </div>
-
-        </div>
-
-      </aside>
-
-
-
-      <main className="main-content">
-
-        <header className="topbar">
-
-          <div className="mobile-brand">
-
-            <Menu size={20} />
-
-            <span>A²FaaS</span>
-
-          </div>
-
-
-
-          <div className="breadcrumb">
-
-            <span>Security Console</span>
-
-
-
-            <span className="breadcrumb-separator">
-
-              /
-
-            </span>
-
-
-
-            <strong>{activePage}</strong>
-
-          </div>
-
-
-
-          <div className="topbar-actions">
-
-            <div
-
-              className="live-status"
-
-              title={systemHealth.message}
-
-            >
-
-              <span
-
-                className={`live-dot ${
-
-                  isOperational
-
-                    ? ""
-
-                    : "status-offline"
-
-                }`}
-
-              />
-
-
-
-              <span>
-
-                {isChecking
-
-                  ? "Checking System"
-
-                  : isOperational
-
-                    ? "System Operational"
-
-                    : "System Offline"}
-
-              </span>
-
-            </div>
-
-
-
-            <button
-
-              className="icon-button"
-
-              aria-label="Notifications"
-
-              title="Notifications"
-
-              type="button"
-
-            >
-
-              <Bell size={18} />
-
-              <span className="notification-dot" />
-
-            </button>
-
-
-
-            <button
-
-              className="icon-button"
-
-              aria-label="Refresh system status"
-
-              title="Refresh system status"
-
-              type="button"
-
-              onClick={() => {
-
-                checkSystemHealth();
-
-                fetchDashboardStats();
-
-              }}
-
-            >
-
-              <RefreshCw size={17} />
-
-            </button>
-
-          </div>
-
-        </header>
-
-
-
-        {activePage === "Overview" && (
-
-          <OverviewPage
-
-            dashboardStats={dashboardStats}
-
-            statsLoading={statsLoading}
-
-          />
-
-        )}
-
-
-
-        {activePage === "ML Engine" && (
-
-          <MLEnginePage />
-
-        )}
-
-
-
-        {activePage === "Firewall" && <FirewallPage />}
-
-
+  const isOperational =
+    systemHealth.status === "healthy" ||
+    systemHealth.status === "operational";
+
+  const isChecking =
+    systemHealth.status === "checking";
+
+  const handleNavigation = (label) => {
+    setActivePage(label);
+    setSidebarOpen(false);
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  };
+
+  return (
+    <div className="app-shell">
+      {sidebarOpen && (
+        <button
+          className="sidebar-backdrop"
+          type="button"
+          aria-label="Close navigation"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+      <aside className={`sidebar ${sidebarOpen ? "sidebar-open" : ""}`}>
+        <div className="brand">
+          <div className="brand-mark">
+            <ShieldCheck
+              size={23}
+              strokeWidth={2.2}
+            />
+          </div>
+
+          <div>
+            <div className="brand-name">
+              A²FaaS
+            </div>
+
+            <div className="brand-subtitle">
+              Adaptive Cloud Security
+            </div>
+          </div>
+        </div>
+
+        <div className="workspace">
+          <div className="workspace-label">
+            SECURITY CONSOLE
+          </div>
+
+          <nav className="navigation">
+            {navigation.map((item) => {
+              const Icon = item.icon;
+
+              const active =
+                activePage === item.label;
+
+              return (
+                <button
+                  key={item.label}
+                  type="button"
+                  onClick={() =>
+                    handleNavigation(
+                      item.label
+                    )
+                  }
+                  className={`nav-item ${
+                    active ? "active" : ""
+                  }`}
+                >
+                  <Icon size={18} />
+
+                  <span>
+                    {item.label}
+                  </span>
+
+                  {active && (
+                    <span className="nav-indicator" />
+                  )}
+                </button>
+              );
+            })}
+          </nav>
+        </div>
+
+        <div className="sidebar-divider" />
+
+        <div className="workspace">
+          <div className="workspace-label">
+            SYSTEM STATUS
+          </div>
+
+          <div className="system-list">
+            {systemItems.map((item) => {
+              const Icon = item.icon;
+
+              return (
+                <div
+                  className="system-item"
+                  key={item.label}
+                >
+                  <div className="system-icon">
+                    <Icon size={16} />
+                  </div>
+
+                  <div className="system-copy">
+                    <span>
+                      {item.label}
+                    </span>
+
+                    <small>
+                      {item.status}
+                    </small>
+                  </div>
+
+                  <span className="system-dot" />
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </aside>
+
+      <main className="main-content">
+        <header className="topbar">
+          <div className="topbar-left">
+            <button
+              className="menu-button"
+              type="button"
+              aria-label={sidebarOpen ? "Close menu" : "Open menu"}
+              aria-expanded={sidebarOpen}
+              onClick={() => setSidebarOpen((open) => !open)}
+            >
+              <Menu size={19} />
+            </button>
+
+            <div>
+              <div className="topbar-title">
+                A²FaaS Security Console
+              </div>
+
+              <div className="topbar-subtitle">
+                Adaptive firewall · ML risk intelligence · Zero Trust
+              </div>
+            </div>
+          </div>
+
+          <div className="topbar-right">
+            <div
+              className={`connection-status ${
+                isOperational
+                  ? "online"
+                  : isChecking
+                  ? "checking"
+                  : "offline"
+              }`}
+            >
+              <span className="connection-dot" />
+
+              {isChecking
+                ? "Checking systems"
+                : isOperational
+                ? "All systems normal"
+                : "Service unavailable"}
+            </div>
+
+            <button
+              className="icon-button"
+              aria-label="Notifications"
+              title="Notifications"
+              type="button"
+            >
+              <Bell size={18} />
+              <span className="notification-dot" />
+            </button>
+
+            <button
+              className="icon-button"
+              aria-label="Refresh system status"
+              title="Refresh system status"
+              type="button"
+              onClick={() => {
+                checkSystemHealth();
+                fetchDashboardStats();
+              }}
+            >
+              <RefreshCw size={17} />
+            </button>
+          </div>
+        </header>
+
+        {activePage === "Overview" && (
+          <OverviewPage
+            dashboardStats={dashboardStats}
+            statsLoading={statsLoading}
+            onAnalyze={() =>
+              handleNavigation("Firewall")
+            }
+          />
+        )}
+
+        {activePage === "ML Engine" && (
+          <MLEnginePage />
+        )}
+
+        {activePage === "Firewall" && (
+          <FirewallPage />
+        )}
 
         {activePage === "Traffic" && (
           <TrafficPage />
         )}
 
-
-
         {activePage === "Zero Trust" && (
-
-          <PlaceholderPage
-
-            icon={LockKeyhole}
-
-            eyebrow="ZERO TRUST SECURITY"
-
-            title="Zero Trust Policy"
-
-            description="Identity, device, and request-context verification for every access attempt."
-
-            status="Zero Trust policy enforced"
-
-          />
-
-        )}
-
-      </main>
-
-    </div>
-
-  );
-
+          <PlaceholderPage
+            icon={LockKeyhole}
+            eyebrow="ZERO TRUST SECURITY"
+            title="Zero Trust Policy"
+            description="Identity, device, and request-context verification for every access attempt."
+            status="Zero Trust policy enforced"
+          />
+        )}
+      </main>
+    </div>
+  );
 }
-
-
 
 function OverviewPage({
-
-  dashboardStats,
-
-  statsLoading,
-
+  dashboardStats,
+  statsLoading,
+  onAnalyze,
 }) {
-
-  return (
-
-    <div className="page-content">
-
-      <section className="page-heading">
-
-        <div>
-
-          <div className="eyebrow">
-
-            <span className="eyebrow-line" />
-
-            CLOUD SECURITY INTELLIGENCE
-
-          </div>
-
-
-
-          <h1>
-
-            Adaptive Firewall Overview
-
-          </h1>
-
-
-
-          <p>
-
-            Real-time visibility into traffic risk,
-
-            ML decisions, and Zero Trust enforcement.
-
-          </p>
-
-        </div>
-
-
-
-        <div className="heading-actions">
-
-          <button
-
-            className="secondary-button"
-
-            type="button"
-
-          >
-
-            <TerminalSquare size={16} />
-
-            API Console
-
-          </button>
-
-
-
-          <button
-
-            className="primary-button"
-
-            type="button"
-
-          >
-
-            <Radar size={16} />
-
-            Analyze Request
-
-          </button>
-
-        </div>
-
-      </section>
-
-
-
-      <section className="security-banner">
-
-        <div className="banner-icon">
-
-          <ShieldCheck size={22} />
-
-        </div>
-
-
-
-        <div className="banner-content">
-
-          <strong>
-
-            Adaptive protection is ready
-
-          </strong>
-
-
-
-          <span>
-
-            Every request will be evaluated through
-
-            ML risk scoring and Zero Trust policy
-
-            verification.
-
-          </span>
-
-        </div>
-
-
-
-        <div className="banner-status">
-
-          <span className="status-check">
-
-            <CheckCircle2 size={15} />
-
-          </span>
-
-
-
-          <span>Protected</span>
-
-        </div>
-
-      </section>
-
-
-
-      <section className="metrics-grid">
-
-        <MetricCard
-
-          icon={Activity}
-
-          label="Requests Analyzed"
-
-          value={
-
-            statsLoading
-
-              ? "..."
-
-              : dashboardStats.total_requests.toLocaleString()
-
-          }
-
-          description={
-
-            statsLoading
-
-              ? "Loading live telemetry"
-
-              : "Requests processed by A²FaaS"
-
-          }
-
-          tone="blue"
-
-        />
-
-
-
-        <MetricCard
-
-          icon={ShieldAlert}
-
-          label="Threats Detected"
-
-          value={
-
-            statsLoading
-
-              ? "..."
-
-              : dashboardStats.high_risk_requests.toLocaleString()
-
-          }
-
-          description={
-
-            statsLoading
-
-              ? "Loading threat telemetry"
-
-              : "High-risk requests detected"
-
-          }
-
-          tone="red"
-
-        />
-
-
-
-        <MetricCard
-
-          icon={Gauge}
-
-          label="Average Risk Score"
-
-          value="0.00%"
-
-          description="Calculated from recent events"
-
-          tone="purple"
-
-        />
-
-
-
-        <MetricCard
-
-          icon={Zap}
-
-          label="Decision Latency"
-
-          value="—"
-
-          description="Measured after analysis"
-
-          tone="green"
-
-        />
-
-      </section>
-
-
-
-      <section className="dashboard-grid">
-
-        <div className="panel traffic-panel">
-
-          <div className="panel-header">
-
-            <div>
-
-              <div className="panel-kicker">
-
-                <Activity size={14} />
-
-                TRAFFIC TELEMETRY
-
-              </div>
-
-
-
-              <h2>Request Activity</h2>
-
-            </div>
-
-
-
-            <button
-
-              className="panel-menu"
-
-              type="button"
-
-            >
-
-              Last 24 hours
-
-              <ChevronDown size={14} />
-
-            </button>
-
-          </div>
-
-
-
-          <div className="chart-area">
-
-            <div className="chart-y-axis">
-
-              <span>100</span>
-
-              <span>75</span>
-
-              <span>50</span>
-
-              <span>25</span>
-
-              <span>0</span>
-
-            </div>
-
-
-
-            <div className="chart">
-
-              <div className="chart-grid-lines">
-
-                <span />
-
-                <span />
-
-                <span />
-
-                <span />
-
-                <span />
-
-              </div>
-
-
-
-              <div className="live-chart-bars">
-
-                {dashboardStats.total_requests > 0 ? (
-
-                  <>
-
-                    <div
-
-                      className="live-bar allowed-bar"
-
-                      style={{
-
-                        height: `${Math.max(
-
-                          8,
-
-                          Math.min(
-
-                            100,
-
-                            dashboardStats.allowed_requests * 10
-
-                          )
-
-                        )}%`,
-
-                      }}
-
-                    />
-
-
-
-                    <div
-
-                      className="live-bar challenged-bar"
-
-                      style={{
-
-                        height: `${Math.max(
-
-                          8,
-
-                          Math.min(
-
-                            100,
-
-                            dashboardStats.challenged_requests * 10
-
-                          )
-
-                        )}%`,
-
-                      }}
-
-                    />
-
-
-
-                    <div
-
-                      className="live-bar blocked-bar"
-
-                      style={{
-
-                        height: `${Math.max(
-
-                          8,
-
-                          Math.min(
-
-                            100,
-
-                            dashboardStats.blocked_requests * 10
-
-                          )
-
-                        )}%`,
-
-                      }}
-
-                    />
-
-                  </>
-
-                ) : (
-
-                  <div className="empty-chart">
-
-                    <div className="empty-chart-icon">
-
-                      <BarChart3 size={21} />
-
-                    </div>
-
-
-
-                    <strong>
-
-                      Awaiting traffic data
-
-                    </strong>
-
-
-
-                    <span>
-
-                      Request telemetry will appear
-
-                      here when the firewall begins
-
-                      analyzing traffic.
-
-                    </span>
-
-                  </div>
-
-                )}
-
-
-
-                <div className="chart-x-axis">
-
-                  {activityData.map((item) => (
-
-                    <span key={item.time}>
-
-                      {item.time}
-
-                    </span>
-
-                  ))}
-
-                </div>
-
-              </div>
-
-            </div>
-
-          </div>
-
-        </div>
-
-
-
-        <div className="panel decision-panel">
-
-          <div className="panel-header">
-
-            <div>
-
-              <div className="panel-kicker">
-
-                <Shield size={14} />
-
-                FIREWALL DECISIONS
-
-              </div>
-
-
-
-              <h2>Decision Distribution</h2>
-
-            </div>
-
-
-
-            <button
-
-              className="panel-menu icon-only"
-
-              type="button"
-
-            >
-
-              <ArrowUpRight size={15} />
-
-            </button>
-
-          </div>
-
-
-
-          <div className="decision-empty">
-
-            <div className="decision-ring">
-
-              <Shield size={28} />
-
-            </div>
-
-
-
-            <strong>
-
-              {dashboardStats.total_requests > 0
-
-                ? `${dashboardStats.total_requests} decisions`
-
-                : "No decisions yet"}
-
-            </strong>
-
-
-
-            <span>
-
-              Allow, challenge, and block decisions
-
-              are tracked from the security database.
-
-            </span>
-
-          </div>
-
-
-
-          <div className="decision-legend">
-
-            <LegendItem
-
-              label="Allowed"
-
-              value={dashboardStats.allowed_requests}
-
-              type="allowed"
-
-            />
-
-
-
-            <LegendItem
-
-              label="Challenged"
-
-              value={dashboardStats.challenged_requests}
-
-              type="challenged"
-
-            />
-
-
-
-            <LegendItem
-
-              label="Blocked"
-
-              value={dashboardStats.blocked_requests}
-
-              type="blocked"
-
-            />
-
-          </div>
-
-        </div>
-
-      </section>
-
-
-
-      <section className="lower-grid">
-
-        <div className="panel events-panel">
-
-          <div className="panel-header">
-
-            <div>
-
-              <div className="panel-kicker">
-
-                <FileWarning size={14} />
-
-                SECURITY EVENTS
-
-              </div>
-
-
-
-              <h2>Recent Activity</h2>
-
-            </div>
-
-
-
-            <button
-
-              className="view-all"
-
-              type="button"
-
-            >
-
-              View all
-
-              <ArrowUpRight size={14} />
-
-            </button>
-
-          </div>
-
-
-
-          <div className="empty-events">
-
-            <div className="empty-events-icon">
-
-              <CircleDot size={21} />
-
-            </div>
-
-
-
-            <div>
-
-              <strong>
-
-                Security telemetry connected
-
-              </strong>
-
-
-
-              <span>
-
-                Live request events are being recorded
-
-                by the firewall analysis engine.
-
-              </span>
-
-            </div>
-
-          </div>
-
-        </div>
-
-
-
-        <div className="panel posture-panel">
-
-          <div className="panel-header">
-
-            <div>
-
-              <div className="panel-kicker">
-
-                <LockKeyhole size={14} />
-
-                SECURITY POSTURE
-
-              </div>
-
-
-
-              <h2>Protection Status</h2>
-
-            </div>
-
-          </div>
-
-
-
-          <div className="posture-list">
-
-            <PostureItem
-
-              icon={ShieldCheck}
-
-              title="Adaptive Firewall"
-
-              status="Ready"
-
-              description="ML risk scoring engine"
-
-            />
-
-
-
-            <PostureItem
-
-              icon={Fingerprint}
-
-              title="Zero Trust"
-
-              status="Enforced"
-
-              description="Identity and context verification"
-
-            />
-
-
-
-            <PostureItem
-
-              icon={Server}
-
-              title="Cloud Application"
-
-              status="Protected"
-
-              description="Application gateway"
-
-            />
-
-
-
-            <PostureItem
-
-              icon={Globe2}
-
-              title="Network Layer"
-
-              status="Monitoring"
-
-              description="Incoming request traffic"
-
-            />
-
-          </div>
-
-        </div>
-
-      </section>
-
-
-
-      <footer className="footer">
-
-        <div>
-
-          <span className="footer-brand">
-
-            A²FaaS
-
-          </span>
-
-
-
-          <span>
-
-            AI-Assisted Adaptive Firewall-as-a-Service
-
-          </span>
-
-        </div>
-
-
-
-        <div className="footer-right">
-
-          <span>v1.0.0</span>
-
-
-
-          <span className="footer-separator">
-
-            •
-
-          </span>
-
-
-
-          <span>
-
-            Development Environment
-
-          </span>
-
-        </div>
-
-      </footer>
-
-    </div>
-
-  );
-
+  const [activityData, setActivityData] = useState(() =>
+    Array.from({ length: 8 }, (_, index) => ({
+      time: `-${24 - index * 3}h`,
+      value: 0,
+    }))
+  );
+  const [activityTotal, setActivityTotal] = useState(0);
+  const [activityLoading, setActivityLoading] = useState(true);
+  const [activityError, setActivityError] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    let requestInProgress = false;
+
+    const parseEventTimestamp = (raw) => {
+      if (raw === undefined || raw === null || raw === "") return NaN;
+
+      // Epoch timestamps can arrive in seconds or milliseconds.
+      if (typeof raw === "number" || /^\d{10,13}$/.test(String(raw).trim())) {
+        const numeric = Number(raw);
+        return numeric < 1e12 ? numeric * 1000 : numeric;
+      }
+
+      const value = String(raw).trim();
+      // ISO timestamps with Z/offset are parsed as absolute instants.
+      const parsed = Date.parse(value);
+      if (Number.isFinite(parsed)) return parsed;
+
+      // SQLite "YYYY-MM-DD HH:mm:ss" is treated as local time if it has no zone.
+      const sqliteMatch = value.match(
+        /^(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2}:\d{2}(?:\\.\d+)?)(?:\\s*(Z|[+-]\d{2}:?\d{2}))?$/i
+      );
+      if (!sqliteMatch) return NaN;
+      const normalized = `${sqliteMatch[1]}T${sqliteMatch[2]}${sqliteMatch[3] || ""}`;
+      const sqliteParsed = Date.parse(normalized);
+      return Number.isFinite(sqliteParsed) ? sqliteParsed : NaN;
+    };
+
+    const loadActivity = async () => {
+      if (requestInProgress) return;
+      requestInProgress = true;
+
+      try {
+        const response = await apiFetch("/api/requests/recent?limit=100");
+        const events = Array.isArray(response)
+          ? response
+          : [
+              response?.events,
+              response?.requests,
+              response?.records,
+              response?.items,
+              response?.results,
+              response?.data?.events,
+              response?.data,
+            ].find(Array.isArray) || [];
+
+        const now = Date.now();
+        const windowStart = now - 24 * 60 * 60 * 1000;
+        const bucketDuration = 3 * 60 * 60 * 1000;
+        const counts = Array(8).fill(0);
+        let counted = 0;
+
+        for (const event of events) {
+          const timestamp = parseEventTimestamp(
+            event?.timestamp ??
+            event?.created_at ??
+            event?.event_timestamp ??
+            event?.request_timestamp ??
+            event?.created ??
+            event?.time ??
+            event?.date
+          );
+
+          if (!Number.isFinite(timestamp)) continue;
+          if (timestamp < windowStart || timestamp > now + 60_000) continue;
+
+          const bucket = Math.min(
+            counts.length - 1,
+            Math.max(0, Math.floor((timestamp - windowStart) / bucketDuration))
+          );
+          counts[bucket] += 1;
+          counted += 1;
+        }
+
+        const formattedBuckets = counts.map((value, index) => {
+          const bucketStart = new Date(windowStart + index * bucketDuration);
+          const label = bucketStart.toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false,
+          });
+          return { time: label, value };
+        });
+
+        if (!cancelled) {
+          setActivityData(formattedBuckets);
+          setActivityTotal(counted);
+          setActivityError("");
+        }
+      } catch (error) {
+        console.error("Unable to load request activity:", error);
+        if (!cancelled) {
+          setActivityError("Request activity could not be loaded. Check the backend connection.");
+        }
+      } finally {
+        requestInProgress = false;
+        if (!cancelled) setActivityLoading(false);
+      }
+    };
+
+    loadActivity();
+    const intervalId = window.setInterval(loadActivity, 15000);
+    const handleFocus = () => loadActivity();
+    window.addEventListener("focus", handleFocus);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(intervalId);
+      window.removeEventListener("focus", handleFocus);
+    };
+  }, []);
+
+  const chartMax = Math.max(5, ...activityData.map((item) => item.value));
+
+  return (
+    <div className="page-content">
+      <section className="page-heading">
+        <div>
+          <div className="eyebrow">
+            <span className="eyebrow-line" />
+            CLOUD SECURITY INTELLIGENCE
+          </div>
+
+          <h1>
+            Adaptive Firewall Overview
+          </h1>
+
+          <p>
+            Real-time visibility into traffic
+            risk, ML decisions, and Zero Trust
+            enforcement.
+          </p>
+        </div>
+
+        <div className="heading-actions">
+          <button
+            className="secondary-button"
+            type="button"
+            onClick={() => {
+              const apiBase = getApiBases()[0];
+              window.open(`${apiBase}/docs`, "_blank", "noopener,noreferrer");
+            }}
+          >
+            <TerminalSquare size={16} />
+            API Console
+          </button>
+
+          {/* FIXED: Analyze Request now navigates to Firewall */}
+          <button
+            className="primary-button"
+            type="button"
+            onClick={onAnalyze}
+          >
+            <Radar size={16} />
+            Analyze Request
+          </button>
+        </div>
+      </section>
+
+      <section className="security-banner">
+        <div className="banner-icon">
+          <ShieldCheck size={22} />
+        </div>
+
+        <div className="banner-content">
+          <strong>
+            Adaptive protection is active
+          </strong>
+
+          <span>
+            A²FaaS is continuously evaluating
+            application traffic using ML risk
+            scoring and Zero Trust verification.
+          </span>
+        </div>
+
+        <div className="banner-status">
+          <span />
+          PROTECTED
+        </div>
+      </section>
+
+      <section className="metrics-grid">
+        <MetricCard
+          icon={Globe2}
+          label="TOTAL REQUESTS"
+          value={
+            statsLoading
+              ? "..."
+              : dashboardStats.total_requests
+          }
+          description="Requests evaluated by A²FaaS"
+          tone="blue"
+        />
+
+        <MetricCard
+          icon={ShieldCheck}
+          label="ALLOWED"
+          value={
+            statsLoading
+              ? "..."
+              : dashboardStats.allowed_requests
+          }
+          description="Requests permitted after verification"
+          tone="green"
+        />
+
+        <MetricCard
+          icon={ShieldAlert}
+          label="CHALLENGED"
+          value={
+            statsLoading
+              ? "..."
+              : dashboardStats.challenged_requests
+          }
+          description="Requests requiring additional verification"
+          tone="orange"
+        />
+
+        <MetricCard
+          icon={FileWarning}
+          label="BLOCKED"
+          value={
+            statsLoading
+              ? "..."
+              : dashboardStats.blocked_requests
+          }
+          description="High-risk requests blocked"
+          tone="red"
+        />
+      </section>
+
+      <section className="dashboard-grid">
+        <div className="dashboard-card">
+          <div className="card-header">
+            <div>
+              <div className="card-eyebrow">
+                TRAFFIC ACTIVITY
+              </div>
+
+              <h2>
+                Request Activity
+              </h2>
+            </div>
+
+            <div className="live-badge">
+              <span />
+              LIVE
+            </div>
+          </div>
+
+          <div className="activity-chart">
+            <div className="chart-y-axis">
+              <span>{chartMax}</span>
+              <span>{Math.round(chartMax * 0.75)}</span>
+              <span>{Math.round(chartMax * 0.5)}</span>
+              <span>{Math.round(chartMax * 0.25)}</span>
+              <span>0</span>
+            </div>
+
+            <div className="chart-area">
+              <div className="chart-grid-lines">
+                <span />
+                <span />
+                <span />
+                <span />
+                <span />
+              </div>
+
+              <div className="chart-bars" role="img" aria-label={`Request activity over the last 24 hours: ${activityTotal} recorded requests in the latest 100 events`}>
+                {activityData.map((item) => (
+                  <div className="chart-bar-column" key={item.time}>
+                    <span className="chart-bar-value">{item.value}</span>
+                    <div className="chart-bar-track">
+                      <div
+                        className="chart-bar"
+                        style={{ height: `${item.value === 0 ? 0 : Math.max(8, (item.value / chartMax) * 100)}%` }}
+                        title={`${item.value} requests ${item.time}`}
+                      />
+                    </div>
+                    <span className="chart-bar-label">{item.time}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div className={`activity-footnote ${activityError ? "error" : ""}`} aria-live="polite">
+            {activityError || (activityLoading
+              ? "Loading request activity…"
+              : `${activityTotal} requests recorded in the last 24 hours · refreshed every 15 seconds`)}
+          </div>
+        </div>
+
+        <div className="dashboard-card">
+          <div className="card-header">
+            <div>
+              <div className="card-eyebrow">
+                DECISION DISTRIBUTION
+              </div>
+
+              <h2>
+                Security Decisions
+              </h2>
+            </div>
+
+            <BarChart3 size={19} />
+          </div>
+
+          <div className="decision-content">
+            <div className="decision-total">
+              <strong>
+                {dashboardStats.total_requests}
+              </strong>
+
+              <span>
+                Requests evaluated
+              </span>
+            </div>
+
+            <div className="legend-list">
+              <LegendItem
+                label="Allowed"
+                value={
+                  dashboardStats.allowed_requests
+                }
+                type="allowed"
+              />
+
+              <LegendItem
+                label="Challenge"
+                value={
+                  dashboardStats.challenged_requests
+                }
+                type="challenge"
+              />
+
+              <LegendItem
+                label="Blocked"
+                value={
+                  dashboardStats.blocked_requests
+                }
+                type="blocked"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="dashboard-card">
+        <div className="card-header">
+          <div>
+            <div className="card-eyebrow">
+              PROTECTION PIPELINE
+            </div>
+
+            <h2>
+              Adaptive Security Architecture
+            </h2>
+          </div>
+
+          <span className="card-link">
+            A²FaaS
+            <ArrowUpRight size={15} />
+          </span>
+        </div>
+
+        <div className="pipeline">
+          <PipelineStep
+            number="01"
+            icon={Network}
+            title="Traffic Interceptor"
+            description="Captures incoming application requests."
+          />
+
+          <PipelineStep
+            number="02"
+            icon={Zap}
+            title="Feature Extraction"
+            description="Converts request context into ML features."
+          />
+
+          <PipelineStep
+            number="03"
+            icon={Cpu}
+            title="ML Risk Engine"
+            description="Computes adaptive traffic risk."
+          />
+
+          <PipelineStep
+            number="04"
+            icon={Fingerprint}
+            title="Zero Trust"
+            description="Validates identity and device context."
+          />
+
+          <PipelineStep
+            number="05"
+            icon={ShieldCheck}
+            title="Decision"
+            description="Allow, challenge, or block."
+          />
+        </div>
+      </section>
+
+      <section className="dashboard-card">
+        <div className="card-header">
+          <div>
+            <div className="card-eyebrow">
+              SECURITY POSTURE
+            </div>
+
+            <h2>
+              Current Protection Status
+            </h2>
+          </div>
+
+          <span className="protected-badge">
+            <CheckCircle2 size={14} />
+            Protected
+          </span>
+        </div>
+
+        <div className="posture-grid">
+          <PostureItem
+            icon={Cloud}
+            title="Cloud Application"
+            status="Protected"
+            description="Application traffic is routed through the adaptive firewall."
+          />
+
+          <PostureItem
+            icon={Cpu}
+            title="ML Risk Engine"
+            status="Ready"
+            description="Logistic regression model is available for risk scoring."
+          />
+
+          <PostureItem
+            icon={Fingerprint}
+            title="Zero Trust"
+            status="Enforced"
+            description="Identity and device verification is applied independently."
+          />
+
+          <PostureItem
+            icon={Shield}
+            title="Adaptive Firewall"
+            status="Active"
+            description="Risk-based decisions are enforced at the request layer."
+          />
+        </div>
+      </section>
+    </div>
+  );
 }
-
-
 
 function MLEnginePage() {
-
-  const [selectedMetric, setSelectedMetric] =
-
-    useState("accuracy");
-
-
-
-  const metricCards = useMemo(
-
-    () => [
-
-      {
-
-        key: "accuracy",
-
-        label: "Accuracy",
-
-        value: `${ML_METRICS.accuracy}%`,
-
-        description: "Overall validation accuracy",
-
-      },
-
-      {
-
-        key: "precision",
-
-        label: "Precision",
-
-        value: `${ML_METRICS.precision}%`,
-
-        description: "Attack prediction precision",
-
-      },
-
-      {
-
-        key: "recall",
-
-        label: "Recall",
-
-        value: `${ML_METRICS.recall}%`,
-
-        description: "Attack detection recall",
-
-      },
-
-      {
-
-        key: "f1",
-
-        label: "F1 Score",
-
-        value: `${ML_METRICS.f1}%`,
-
-        description: "Balanced classification score",
-
-      },
-
-    ],
-
-    []
-
-  );
-
-
-
-  return (
-
-    <div className="page-content">
-
-      <section className="page-heading">
-
-        <div>
-
-          <div className="eyebrow">
-
-            <span className="eyebrow-line" />
-
-            MACHINE LEARNING INTELLIGENCE
-
-          </div>
-
-
-
-          <h1>
-
-            ML Risk Engine
-
-          </h1>
-
-
-
-          <p>
-
-            Transparent view of the trained A²FaaS
-
-            traffic-risk classification model.
-
-          </p>
-
-        </div>
-
-
-
-        <div className="heading-actions">
-
-          <div
-
-            style={{
-
-              display: "flex",
-
-              alignItems: "center",
-
-              gap: "8px",
-
-              padding: "10px 14px",
-
-              borderRadius: "10px",
-
-              border: "1px solid #dce4ef",
-
-              background: "#ffffff",
-
-              color: "#16794f",
-
-              fontSize: "12px",
-
-              fontWeight: 700,
-
-            }}
-
-          >
-
-            <CheckCircle2 size={15} />
-
-            MODEL READY
-
-          </div>
-
-        </div>
-
-      </section>
-
-
-
-      <section
-
-        style={{
-
-          display: "grid",
-
-          gridTemplateColumns:
-
-            "minmax(0, 1.5fr) minmax(300px, 0.9fr)",
-
-          gap: "16px",
-
-          marginBottom: "16px",
-
-        }}
-
-      >
-
-        <div
-
-          style={{
-
-            background: "#ffffff",
-
-            border: "1px solid #e1e7f0",
-
-            borderRadius: "16px",
-
-            padding: "24px",
-
-            boxShadow:
-
-              "0 8px 30px rgba(30, 45, 80, 0.04)",
-
-          }}
-
-        >
-
-          <div
-
-            style={{
-
-              display: "flex",
-
-              justifyContent: "space-between",
-
-              alignItems: "flex-start",
-
-              marginBottom: "24px",
-
-            }}
-
-          >
-
-            <div>
-
-              <div
-
-                style={{
-
-                  fontSize: "11px",
-
-                  fontWeight: 800,
-
-                  letterSpacing: "1.2px",
-
-                  color: "#667eea",
-
-                  marginBottom: "8px",
-
-                }}
-
-              >
-
-                MODEL PROFILE
-
-              </div>
-
-
-
-              <h2
-
-                style={{
-
-                  margin: 0,
-
-                  color: "#172033",
-
-                  fontSize: "24px",
-
-                  fontWeight: 800,
-
-                }}
-
-              >
-
-                Logistic Regression
-
-              </h2>
-
-
-
-              <p
-
-                style={{
-
-                  margin:
-
-                    "7px 0 0",
-
-                  color: "#7b879d",
-
-                  fontSize: "13px",
-
-                }}
-
-              >
-
-                Lightweight binary classifier for
-
-                adaptive cloud traffic risk scoring.
-
-              </p>
-
-            </div>
-
-
-
-            <div
-
-              style={{
-
-                width: "46px",
-
-                height: "46px",
-
-                borderRadius: "12px",
-
-                display: "flex",
-
-                alignItems: "center",
-
-                justifyContent: "center",
-
-                background: "#eef1ff",
-
-                color: "#5d6fe5",
-
-              }}
-
-            >
-
-              <Cpu size={23} />
-
-            </div>
-
-          </div>
-
-
-
-          <div
-
-            style={{
-
-              display: "grid",
-
-              gridTemplateColumns:
-
-                "repeat(3, minmax(0, 1fr))",
-
-              gap: "12px",
-
-            }}
-
-          >
-
-            <MLInfoBox
-
-              label="Dataset"
-
-              value="UNSW-NB15"
-
-            />
-
-
-
-            <MLInfoBox
-
-              label="Features"
-
-              value="42"
-
-            />
-
-
-
-            <MLInfoBox
-
-              label="Task"
-
-              value="Binary Classification"
-
-            />
-
-          </div>
-
-        </div>
-
-
-
-        <div
-
-          style={{
-
-            background:
-
-              "linear-gradient(145deg, #17233d, #24365c)",
-
-            borderRadius: "16px",
-
-            padding: "24px",
-
-            color: "#ffffff",
-
-            boxShadow:
-
-              "0 12px 35px rgba(31, 48, 86, 0.16)",
-
-          }}
-
-        >
-
-          <div
-
-            style={{
-
-              display: "flex",
-
-              alignItems: "center",
-
-              gap: "9px",
-
-              color: "#b8c7ff",
-
-              fontSize: "11px",
-
-              fontWeight: 800,
-
-              letterSpacing: "1.2px",
-
-              marginBottom: "20px",
-
-            }}
-
-          >
-
-            <Radar size={15} />
-
-            RISK PIPELINE
-
-          </div>
-
-
-
-          <div
-
-            style={{
-
-              display: "flex",
-
-              flexDirection: "column",
-
-              gap: "11px",
-
-            }}
-
-          >
-
-            <PipelineStep
-
-              number="01"
-
-              title="Traffic Features"
-
-              text="42 normalized inputs"
-
-            />
-
-
-
-            <PipelineStep
-
-              number="02"
-
-              title="ML Prediction"
-
-              text="Normal / Attack"
-
-            />
-
-
-
-            <PipelineStep
-
-              number="03"
-
-              title="Risk Score"
-
-              text="Attack probability"
-
-            />
-
-
-
-            <PipelineStep
-
-              number="04"
-
-              title="Firewall Decision"
-
-              text="Allow / Challenge / Block"
-
-            />
-
-          </div>
-
-        </div>
-
-      </section>
-
-
-
-      <section
-
-        style={{
-
-          display: "grid",
-
-          gridTemplateColumns:
-
-            "repeat(4, minmax(0, 1fr))",
-
-          gap: "14px",
-
-          marginBottom: "16px",
-
-        }}
-
-      >
-
-        {metricCards.map((metric) => {
-
-          const active =
-
-            selectedMetric === metric.key;
-
-
-
-          return (
-
-            <button
-
-              key={metric.key}
-
-              type="button"
-
-              onClick={() =>
-
-                setSelectedMetric(metric.key)
-
-              }
-
-              style={{
-
-                textAlign: "left",
-
-                cursor: "pointer",
-
-                border:
-
-                  active
-
-                    ? "1px solid #6a76df"
-
-                    : "1px solid #e1e7f0",
-
-                background:
-
-                  active
-
-                    ? "#f5f6ff"
-
-                    : "#ffffff",
-
-                borderRadius: "14px",
-
-                padding: "20px",
-
-                boxShadow:
-
-                  active
-
-                    ? "0 8px 24px rgba(93,111,229,0.10)"
-
-                    : "0 6px 20px rgba(30,45,80,0.035)",
-
-              }}
-
-            >
-
-              <div
-
-                style={{
-
-                  display: "flex",
-
-                  justifyContent: "space-between",
-
-                  alignItems: "center",
-
-                  marginBottom: "13px",
-
-                }}
-
-              >
-
-                <span
-
-                  style={{
-
-                    fontSize: "10px",
-
-                    fontWeight: 800,
-
-                    letterSpacing: "1px",
-
-                    color: "#71809a",
-
-                  }}
-
-                >
-
-                  {metric.label.toUpperCase()}
-
-                </span>
-
-
-
-                <CheckCircle2
-
-                  size={15}
-
-                  color="#5d6fe5"
-
-                />
-
-              </div>
-
-
-
-              <div
-
-                style={{
-
-                  fontSize: "28px",
-
-                  lineHeight: 1,
-
-                  fontWeight: 850,
-
-                  color: "#172033",
-
-                  marginBottom: "8px",
-
-                }}
-
-              >
-
-                {metric.value}
-
-              </div>
-
-
-
-              <div
-
-                style={{
-
-                  fontSize: "11px",
-
-                  color: "#8994a8",
-
-                }}
-
-              >
-
-                {metric.description}
-
-              </div>
-
-            </button>
-
-          );
-
-        })}
-
-      </section>
-
-
-
-      <section
-
-        style={{
-
-          display: "grid",
-
-          gridTemplateColumns:
-
-            "minmax(0, 1.35fr) minmax(330px, 0.85fr)",
-
-          gap: "16px",
-
-          marginBottom: "16px",
-
-        }}
-
-      >
-
-        <div
-
-          style={{
-
-            background: "#ffffff",
-
-            border: "1px solid #e1e7f0",
-
-            borderRadius: "16px",
-
-            padding: "24px",
-
-          }}
-
-        >
-
-          <div
-
-            style={{
-
-              display: "flex",
-
-              justifyContent: "space-between",
-
-              alignItems: "center",
-
-              marginBottom: "20px",
-
-            }}
-
-          >
-
-            <div>
-
-              <div
-
-                style={{
-
-                  fontSize: "10px",
-
-                  fontWeight: 800,
-
-                  letterSpacing: "1.1px",
-
-                  color: "#667eea",
-
-                  marginBottom: "7px",
-
-                }}
-
-              >
-
-                VALIDATION RESULTS
-
-              </div>
-
-
-
-              <h2
-
-                style={{
-
-                  margin: 0,
-
-                  fontSize: "19px",
-
-                  color: "#172033",
-
-                }}
-
-              >
-
-                Classification Performance
-
-              </h2>
-
-            </div>
-
-
-
-            <span
-
-              style={{
-
-                padding: "7px 10px",
-
-                borderRadius: "8px",
-
-                background: "#edf8f2",
-
-                color: "#247a50",
-
-                fontSize: "10px",
-
-                fontWeight: 800,
-
-              }}
-
-            >
-
-              VERIFIED RUN
-
-            </span>
-
-          </div>
-
-
-
-          <PerformanceRow
-
-            label="Accuracy"
-
-            value={ML_METRICS.accuracy}
-
-          />
-
-
-
-          <PerformanceRow
-
-            label="Precision"
-
-            value={ML_METRICS.precision}
-
-          />
-
-
-
-          <PerformanceRow
-
-            label="Recall"
-
-            value={ML_METRICS.recall}
-
-          />
-
-
-
-          <PerformanceRow
-
-            label="F1 Score"
-
-            value={ML_METRICS.f1}
-
-          />
-
-        </div>
-
-
-
-        <div
-
-          style={{
-
-            background: "#ffffff",
-
-            border: "1px solid #e1e7f0",
-
-            borderRadius: "16px",
-
-            padding: "24px",
-
-          }}
-
-        >
-
-          <div
-
-            style={{
-
-              fontSize: "10px",
-
-              fontWeight: 800,
-
-              letterSpacing: "1.1px",
-
-              color: "#667eea",
-
-              marginBottom: "7px",
-
-            }}
-
-          >
-
-            CONFUSION MATRIX
-
-          </div>
-
-
-
-          <h2
-
-            style={{
-
-              margin:
-
-                "0 0 18px",
-
-              fontSize: "19px",
-
-              color: "#172033",
-
-            }}
-
-          >
-
-            Validation Predictions
-
-          </h2>
-
-
-
-          <div
-
-            style={{
-
-              display: "grid",
-
-              gridTemplateColumns:
-
-                "80px 1fr 1fr",
-
-              border:
-
-                "1px solid #e2e7ef",
-
-              borderRadius: "10px",
-
-              overflow: "hidden",
-
-            }}
-
-          >
-
-            <div
-
-              style={{
-
-                background: "#f6f8fb",
-
-                padding: "12px",
-
-              }}
-
-            />
-
-
-
-            <MatrixHeader text="Predicted Normal" />
-
-
-
-            <MatrixHeader text="Predicted Attack" />
-
-
-
-            <MatrixHeader text="Actual Normal" />
-
-
-
-            <MatrixCell
-
-              value="10,007"
-
-              tone="normal"
-
-              label="True Negative"
-
-            />
-
-
-
-            <MatrixCell
-
-              value="1,193"
-
-              tone="warning"
-
-              label="False Positive"
-
-            />
-
-
-
-            <MatrixHeader text="Actual Attack" />
-
-
-
-            <MatrixCell
-
-              value="1,180"
-
-              tone="warning"
-
-              label="False Negative"
-
-            />
-
-
-
-            <MatrixCell
-
-              value="22,689"
-
-              tone="danger"
-
-              label="True Positive"
-
-            />
-
-          </div>
-
-        </div>
-
-      </section>
-
-
-
-      <section
-
-        style={{
-
-          display: "grid",
-
-          gridTemplateColumns:
-
-            "repeat(3, minmax(0, 1fr))",
-
-          gap: "14px",
-
-          marginBottom: "16px",
-
-        }}
-
-      >
-
-        <RuntimeCard
-
-          icon={Zap}
-
-          label="Prediction Latency"
-
-          value={`${ML_METRICS.predictionTime} ms`}
-
-          description="Measured during model evaluation"
-
-        />
-
-
-
-        <RuntimeCard
-
-          icon={BarChart3}
-
-          label="Training Time"
-
-          value={`${ML_METRICS.trainingTime} s`}
-
-          description="End-to-end training run"
-
-        />
-
-
-
-        <RuntimeCard
-
-          icon={Activity}
-
-          label="Validation Set"
-
-          value={ML_METRICS.validationSamples.toLocaleString()}
-
-          description="Stratified validation records"
-
-        />
-
-      </section>
-
-
-
-      <section
-
-        style={{
-
-          background: "#ffffff",
-
-          border: "1px solid #e1e7f0",
-
-          borderRadius: "16px",
-
-          padding: "22px 24px",
-
-          marginBottom: "16px",
-
-          display: "flex",
-
-          alignItems: "flex-start",
-
-          gap: "14px",
-
-        }}
-
-      >
-
-        <div
-
-          style={{
-
-            width: "38px",
-
-            height: "38px",
-
-            borderRadius: "10px",
-
-            background: "#eef1ff",
-
-            color: "#5d6fe5",
-
-            display: "flex",
-
-            alignItems: "center",
-
-            justifyContent: "center",
-
-            flexShrink: 0,
-
-          }}
-
-        >
-
-          <Info size={19} />
-
-        </div>
-
-
-
-        <div>
-
-          <strong
-
-            style={{
-
-              display: "block",
-
-              color: "#172033",
-
-              fontSize: "14px",
-
-              marginBottom: "5px",
-
-            }}
-
-          >
-
-            How A²FaaS uses the model
-
-          </strong>
-
-
-
-          <span
-
-            style={{
-
-              color: "#707d93",
-
-              fontSize: "12px",
-
-              lineHeight: 1.7,
-
-            }}
-
-          >
-
-            The firewall converts observable request
-
-            properties into the 42-feature schema
-
-            expected by the trained UNSW-NB15 model.
-
-            Logistic Regression produces an attack
-
-            probability, which becomes the ML risk
-
-            score. The result is then passed to the
-
-            Zero Trust policy engine before the final
-
-            Allow, Challenge, or Block decision.
-
-          </span>
-
-        </div>
-
-      </section>
-
-
-
-      <footer className="footer">
-
-        <div>
-
-          <span className="footer-brand">
-
-            A²FaaS
-
-          </span>
-
-
-
-          <span>
-
-            AI-Assisted Adaptive Firewall-as-a-Service
-
-          </span>
-
-        </div>
-
-
-
-        <div className="footer-right">
-
-          <span>ML Engine</span>
-
-
-
-          <span className="footer-separator">
-
-            •
-
-          </span>
-
-
-
-          <span>
-
-            UNSW-NB15 / Logistic Regression
-
-          </span>
-
-        </div>
-
-      </footer>
-
-    </div>
-
-  );
-
+  return (
+    <div className="page-content">
+      <section className="page-heading">
+        <div>
+          <div className="eyebrow">
+            <span className="eyebrow-line" />
+            MACHINE LEARNING SECURITY
+          </div>
+
+          <h1>
+            ML Risk Engine
+          </h1>
+
+          <p>
+            Lightweight machine learning model
+            for adaptive network threat detection.
+          </p>
+        </div>
+
+        <div className="heading-actions">
+          <div className="model-status">
+            <span />
+            MODEL READY
+          </div>
+        </div>
+      </section>
+
+      <section className="security-banner">
+        <div className="banner-icon">
+          <Cpu size={22} />
+        </div>
+
+        <div className="banner-content">
+          <strong>
+            {ML_METRICS.model}
+          </strong>
+
+          <span>
+            Trained on {ML_METRICS.dataset}
+            with {ML_METRICS.features} extracted
+            traffic features.
+          </span>
+        </div>
+
+        <div className="banner-status">
+          <span />
+          ONLINE
+        </div>
+      </section>
+
+      <section className="metric-grid">
+        <MetricCard
+          icon={Gauge}
+          label="ACCURACY"
+          value={`${ML_METRICS.accuracy}%`}
+          description="Validation classification accuracy"
+          tone="blue"
+        />
+
+        <MetricCard
+          icon={ShieldCheck}
+          label="PRECISION"
+          value={`${ML_METRICS.precision}%`}
+          description="Attack prediction precision"
+          tone="green"
+        />
+
+        <MetricCard
+          icon={Radar}
+          label="RECALL"
+          value={`${ML_METRICS.recall}%`}
+          description="Attack detection recall"
+          tone="orange"
+        />
+
+        <MetricCard
+          icon={BarChart3}
+          label="F1 SCORE"
+          value={`${ML_METRICS.f1}%`}
+          description="Balanced classification metric"
+          tone="purple"
+        />
+      </section>
+
+      <section className="dashboard-grid">
+        <div className="dashboard-card">
+          <div className="card-header">
+            <div>
+              <div className="card-eyebrow">
+                MODEL INFORMATION
+              </div>
+
+              <h2>
+                Risk Scoring Model
+              </h2>
+            </div>
+
+            <Cpu size={19} />
+          </div>
+
+          <div className="info-grid">
+            <MLInfoBox
+              label="Algorithm"
+              value={ML_METRICS.model}
+            />
+
+            <MLInfoBox
+              label="Dataset"
+              value={ML_METRICS.dataset}
+            />
+
+            <MLInfoBox
+              label="Features"
+              value={ML_METRICS.features}
+            />
+
+            <MLInfoBox
+              label="Prediction Time"
+              value={`${ML_METRICS.averagePredictionLatencyMs.toFixed(3)} ms`}
+            />
+          </div>
+        </div>
+
+        <div className="dashboard-card">
+          <div className="card-header">
+            <div>
+              <div className="card-eyebrow">
+                DATASET
+              </div>
+
+              <h2>
+                Training Distribution
+              </h2>
+            </div>
+
+            <Server size={19} />
+          </div>
+
+          <div className="dataset-bars">
+            <div className="dataset-row">
+              <div className="dataset-label">
+                Normal Traffic
+              </div>
+
+              <div className="dataset-bar">
+                <span
+                  style={{
+                    width: "32%",
+                  }}
+                />
+              </div>
+
+              <strong>
+                {ML_METRICS.normalSamples.toLocaleString()}
+              </strong>
+            </div>
+
+            <div className="dataset-row">
+              <div className="dataset-label">
+                Attack Traffic
+              </div>
+
+              <div className="dataset-bar">
+                <span
+                  style={{
+                    width: "68%",
+                  }}
+                />
+              </div>
+
+              <strong>
+                {ML_METRICS.attackSamples.toLocaleString()}
+              </strong>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="dashboard-card">
+        <div className="card-header">
+          <div>
+            <div className="card-eyebrow">
+              MODEL PIPELINE
+            </div>
+
+            <h2>
+              ML Processing Flow
+            </h2>
+          </div>
+        </div>
+
+        <div className="pipeline">
+          <PipelineStep
+            number="01"
+            icon={Network}
+            title="Request Capture"
+            description="Incoming traffic is intercepted."
+          />
+
+          <PipelineStep
+            number="02"
+            icon={BarChart3}
+            title="Feature Extraction"
+            description="42 request-level features are generated."
+          />
+
+          <PipelineStep
+            number="03"
+            icon={Cpu}
+            title="Risk Prediction"
+            description="The classifier generates a risk score."
+          />
+
+          <PipelineStep
+            number="04"
+            icon={ShieldAlert}
+            title="Risk Classification"
+            description="Traffic is categorized by severity."
+          />
+
+          <PipelineStep
+            number="05"
+            icon={ShieldCheck}
+            title="Policy Decision"
+            description="Zero Trust determines final access."
+          />
+        </div>
+      </section>
+
+      <section className="dashboard-card">
+        <div className="card-header">
+          <div>
+            <div className="card-eyebrow">
+              PERFORMANCE
+            </div>
+
+            <h2>
+              Model Evaluation
+            </h2>
+          </div>
+        </div>
+
+        <div className="performance-table">
+          <PerformanceRow
+            metric="Accuracy"
+            value={ML_METRICS.accuracy}
+          />
+
+          <PerformanceRow
+            metric="Precision"
+            value={ML_METRICS.precision}
+          />
+
+          <PerformanceRow
+            metric="Recall"
+            value={ML_METRICS.recall}
+          />
+
+          <PerformanceRow
+            metric="F1 Score"
+            value={ML_METRICS.f1}
+          />
+        </div>
+      </section>
+    </div>
+  );
 }
-
-
 
 function MLInfoBox({ label, value }) {
+  return (
+    <div className="info-box">
+      <span>
+        {label}
+      </span>
 
-  return (
-
-    <div
-
-      style={{
-
-        padding: "14px",
-
-        borderRadius: "10px",
-
-        background: "#f7f9fc",
-
-        border: "1px solid #e8edf4",
-
-      }}
-
-    >
-
-      <div
-
-        style={{
-
-          color: "#8490a4",
-
-          fontSize: "10px",
-
-          fontWeight: 800,
-
-          letterSpacing: "0.8px",
-
-          marginBottom: "6px",
-
-        }}
-
-      >
-
-        {label.toUpperCase()}
-
-      </div>
-
-
-
-      <div
-
-        style={{
-
-          color: "#1b263b",
-
-          fontSize: "13px",
-
-          fontWeight: 750,
-
-        }}
-
-      >
-
-        {value}
-
-      </div>
-
-    </div>
-
-  );
-
+      <strong>
+        {value}
+      </strong>
+    </div>
+  );
 }
-
-
 
 function PipelineStep({
-
-  number,
-
-  title,
-
-  text,
-
+  number,
+  icon: Icon,
+  title,
+  description,
 }) {
+  return (
+    <div className="pipeline-step">
+      <div className="pipeline-number">
+        {number}
+      </div>
 
-  return (
+      <div className="pipeline-icon">
+        <Icon size={18} />
+      </div>
 
-    <div
+      <div className="pipeline-copy">
+        <strong>
+          {title}
+        </strong>
 
-      style={{
-
-        display: "flex",
-
-        alignItems: "center",
-
-        gap: "12px",
-
-        padding: "10px 0",
-
-        borderBottom:
-
-          "1px solid rgba(255,255,255,0.09)",
-
-      }}
-
-    >
-
-      <span
-
-        style={{
-
-          fontSize: "10px",
-
-          fontWeight: 800,
-
-          color: "#aab9e9",
-
-          width: "22px",
-
-        }}
-
-      >
-
-        {number}
-
-      </span>
-
-
-
-      <div>
-
-        <strong
-
-          style={{
-
-            display: "block",
-
-            fontSize: "12px",
-
-            color: "#ffffff",
-
-            marginBottom: "2px",
-
-          }}
-
-        >
-
-          {title}
-
-        </strong>
-
-
-
-        <span
-
-          style={{
-
-            fontSize: "10px",
-
-            color: "#aebbd8",
-
-          }}
-
-        >
-
-          {text}
-
-        </span>
-
-      </div>
-
-    </div>
-
-  );
-
+        <span>
+          {description}
+        </span>
+      </div>
+    </div>
+  );
 }
-
-
 
 function PerformanceRow({
-
-  label,
-
-  value,
-
+  metric,
+  value,
 }) {
+  return (
+    <div className="performance-row">
+      <span>
+        {metric}
+      </span>
 
-  return (
+      <div className="performance-bar">
+        <span
+          style={{
+            width: `${value}%`,
+          }}
+        />
+      </div>
 
-    <div
-
-      style={{
-
-        marginBottom: "18px",
-
-      }}
-
-    >
-
-      <div
-
-        style={{
-
-          display: "flex",
-
-          justifyContent: "space-between",
-
-          alignItems: "center",
-
-          marginBottom: "7px",
-
-        }}
-
-      >
-
-        <span
-
-          style={{
-
-            color: "#536178",
-
-            fontSize: "12px",
-
-            fontWeight: 700,
-
-          }}
-
-        >
-
-          {label}
-
-        </span>
-
-
-
-        <strong
-
-          style={{
-
-            color: "#172033",
-
-            fontSize: "12px",
-
-          }}
-
-        >
-
-          {value.toFixed(2)}%
-
-        </strong>
-
-      </div>
-
-
-
-      <div
-
-        style={{
-
-          height: "8px",
-
-          borderRadius: "20px",
-
-          background: "#edf0f5",
-
-          overflow: "hidden",
-
-        }}
-
-      >
-
-        <div
-
-          style={{
-
-            height: "100%",
-
-            width: `${value}%`,
-
-            borderRadius: "20px",
-
-            background:
-
-              "linear-gradient(90deg, #6474df, #7b86e8)",
-
-          }}
-
-        />
-
-      </div>
-
-    </div>
-
-  );
-
+      <strong>
+        {value}%
+      </strong>
+    </div>
+  );
 }
-
-
-
-function MatrixHeader({ text }) {
-
-  return (
-
-    <div
-
-      style={{
-
-        padding: "11px",
-
-        background: "#f6f8fb",
-
-        borderLeft:
-
-          "1px solid #e2e7ef",
-
-        borderBottom:
-
-          "1px solid #e2e7ef",
-
-        color: "#718097",
-
-        fontSize: "9px",
-
-        fontWeight: 800,
-
-        textAlign: "center",
-
-      }}
-
-    >
-
-      {text}
-
-    </div>
-
-  );
-
-}
-
-
-
-function MatrixCell({
-
-  value,
-
-  tone,
-
-  label,
-
-}) {
-
-  const background =
-
-    tone === "danger"
-
-      ? "#edf8f2"
-
-      : tone === "warning"
-
-        ? "#fff8e9"
-
-        : "#f4f7ff";
-
-
-
-  const color =
-
-    tone === "danger"
-
-      ? "#26784f"
-
-      : tone === "warning"
-
-        ? "#98711e"
-
-        : "#5669c9";
-
-
-
-  return (
-
-    <div
-
-      title={label}
-
-      style={{
-
-        padding: "18px 10px",
-
-        background,
-
-        borderLeft:
-
-          "1px solid #e2e7ef",
-
-        borderBottom:
-
-          "1px solid #e2e7ef",
-
-        textAlign: "center",
-
-        color,
-
-        fontSize: "16px",
-
-        fontWeight: 800,
-
-      }}
-
-    >
-
-      {value}
-
-    </div>
-
-  );
-
-}
-
-
-
-function RuntimeCard({
-
-  icon: Icon,
-
-  label,
-
-  value,
-
-  description,
-
-}) {
-
-  return (
-
-    <div
-
-      style={{
-
-        background: "#ffffff",
-
-        border: "1px solid #e1e7f0",
-
-        borderRadius: "14px",
-
-        padding: "20px",
-
-        display: "flex",
-
-        alignItems: "flex-start",
-
-        gap: "13px",
-
-      }}
-
-    >
-
-      <div
-
-        style={{
-
-          width: "38px",
-
-          height: "38px",
-
-          borderRadius: "10px",
-
-          background: "#f0f2ff",
-
-          color: "#5d6fe5",
-
-          display: "flex",
-
-          alignItems: "center",
-
-          justifyContent: "center",
-
-          flexShrink: 0,
-
-        }}
-
-      >
-
-        <Icon size={18} />
-
-      </div>
-
-
-
-      <div>
-
-        <div
-
-          style={{
-
-            color: "#7b879d",
-
-            fontSize: "10px",
-
-            fontWeight: 800,
-
-            letterSpacing: "0.8px",
-
-            marginBottom: "5px",
-
-          }}
-
-        >
-
-          {label.toUpperCase()}
-
-        </div>
-
-
-
-        <div
-
-          style={{
-
-            color: "#172033",
-
-            fontSize: "21px",
-
-            fontWeight: 850,
-
-            marginBottom: "4px",
-
-          }}
-
-        >
-
-          {value}
-
-        </div>
-
-
-
-        <div
-
-          style={{
-
-            color: "#8994a8",
-
-            fontSize: "10px",
-
-          }}
-
-        >
-
-          {description}
-
-        </div>
-
-      </div>
-
-    </div>
-
-  );
-
-}
-
-
 
 function PlaceholderPage({
-
-  icon: Icon,
-
-  eyebrow,
-
-  title,
-
-  description,
-
-  status,
-
+  icon: Icon,
+  eyebrow,
+  title,
+  description,
+  status,
 }) {
-
-  return (
-
-    <div className="page-content">
-
-      <section className="page-heading">
-
-        <div>
-
-          <div className="eyebrow">
-
-            <span className="eyebrow-line" />
-
-            {eyebrow}
-
-          </div>
-
-
-
-          <h1>{title}</h1>
-
-
-
-          <p>{description}</p>
-
-        </div>
-
-      </section>
-
-
-
-      <section
-
-        style={{
-
-          minHeight: "420px",
-
-          display: "flex",
-
-          alignItems: "center",
-
-          justifyContent: "center",
-
-          background: "#ffffff",
-
-          border: "1px solid #e1e7f0",
-
-          borderRadius: "16px",
-
-        }}
-
-      >
-
-        <div
-
-          style={{
-
-            textAlign: "center",
-
-            maxWidth: "500px",
-
-            padding: "40px",
-
-          }}
-
-        >
-
-          <div
-
-            style={{
-
-              width: "72px",
-
-              height: "72px",
-
-              margin: "0 auto 20px",
-
-              borderRadius: "20px",
-
-              background: "#eef1ff",
-
-              color: "#5d6fe5",
-
-              display: "flex",
-
-              alignItems: "center",
-
-              justifyContent: "center",
-
-            }}
-
-          >
-
-            <Icon size={34} />
-
-          </div>
-
-
-
-          <h2
-
-            style={{
-
-              margin:
-
-                "0 0 10px",
-
-              color: "#172033",
-
-            }}
-
-          >
-
-            Module Connected
-
-          </h2>
-
-
-
-          <p
-
-            style={{
-
-              margin:
-
-                "0 0 20px",
-
-              color: "#7b879d",
-
-              fontSize: "13px",
-
-              lineHeight: 1.7,
-
-            }}
-
-          >
-
-            {description}
-
-          </p>
-
-
-
-          <div
-
-            style={{
-
-              display: "inline-flex",
-
-              alignItems: "center",
-
-              gap: "7px",
-
-              padding: "8px 12px",
-
-              borderRadius: "8px",
-
-              background: "#edf8f2",
-
-              color: "#26784f",
-
-              fontSize: "11px",
-
-              fontWeight: 800,
-
-            }}
-
-          >
-
-            <CheckCircle2 size={14} />
-
-            {status}
-
-          </div>
-
-        </div>
-
-      </section>
-
-    </div>
-
-  );
-
+  return (
+    <div className="page-content">
+      <section className="page-heading">
+        <div>
+          <div className="eyebrow">
+            <span className="eyebrow-line" />
+            {eyebrow}
+          </div>
+
+          <h1>
+            {title}
+          </h1>
+
+          <p>
+            {description}
+          </p>
+        </div>
+      </section>
+
+      <section
+        style={{
+          minHeight: "420px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "#ffffff",
+          border: "1px solid #e1e7f0",
+          borderRadius: "16px",
+        }}
+      >
+        <div
+          style={{
+            textAlign: "center",
+            maxWidth: "500px",
+            padding: "40px",
+          }}
+        >
+          <div
+            style={{
+              width: "72px",
+              height: "72px",
+              margin: "0 auto 20px",
+              borderRadius: "20px",
+              background: "#eef1ff",
+              color: "#5d6fe5",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Icon size={34} />
+          </div>
+
+          <h2
+            style={{
+              margin: "0 0 10px",
+              color: "#172033",
+            }}
+          >
+            Module Connected
+          </h2>
+
+          <p
+            style={{
+              margin: "0 0 20px",
+              color: "#7b879d",
+              fontSize: "13px",
+              lineHeight: 1.7,
+            }}
+          >
+            {description}
+          </p>
+
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "7px",
+              padding: "8px 12px",
+              borderRadius: "8px",
+              background: "#edf8f2",
+              color: "#26784f",
+              fontSize: "11px",
+              fontWeight: 800,
+            }}
+          >
+            <CheckCircle2 size={14} />
+            {status}
+          </div>
+        </div>
+      </section>
+    </div>
+  );
 }
-
-
 
 function MetricCard({
-
-  icon: Icon,
-
-  label,
-
-  value,
-
-  description,
-
-  tone,
-
+  icon: Icon,
+  label,
+  value,
+  description,
+  tone,
 }) {
+  return (
+    <div
+      className={`metric-card ${tone}`}
+    >
+      <div className="metric-top">
+        <div className="metric-icon">
+          <Icon size={18} />
+        </div>
 
-  return (
+        <span className="metric-live">
+          <span />
+          LIVE
+        </span>
+      </div>
 
-    <div className={`metric-card ${tone}`}>
+      <div className="metric-label">
+        {label}
+      </div>
 
-      <div className="metric-top">
+      <div className="metric-value">
+        {value}
+      </div>
 
-        <div className="metric-icon">
-
-          <Icon size={18} />
-
-        </div>
-
-
-
-        <span className="metric-live">
-
-          <span />
-
-          LIVE
-
-        </span>
-
-      </div>
-
-
-
-      <div className="metric-label">
-
-        {label}
-
-      </div>
-
-
-
-      <div className="metric-value">
-
-        {value}
-
-      </div>
-
-
-
-      <div className="metric-description">
-
-        {description}
-
-      </div>
-
-    </div>
-
-  );
-
+      <div className="metric-description">
+        {description}
+      </div>
+    </div>
+  );
 }
-
-
 
 function LegendItem({
-
-  label,
-
-  value,
-
-  type,
-
+  label,
+  value,
+  type,
 }) {
+  return (
+    <div className="legend-item">
+      <div
+        className={`legend-dot ${type}`}
+      />
 
-  return (
+      <span>
+        {label}
+      </span>
 
-    <div className="legend-item">
-
-      <div
-
-        className={`legend-dot ${type}`}
-
-      />
-
-
-
-      <span>{label}</span>
-
-
-
-      <strong>{value}</strong>
-
-    </div>
-
-  );
-
+      <strong>
+        {value}
+      </strong>
+    </div>
+  );
 }
-
-
 
 function PostureItem({
-
-  icon: Icon,
-
-  title,
-
-  status,
-
-  description,
-
+  icon: Icon,
+  title,
+  status,
+  description,
 }) {
+  return (
+    <div className="posture-item">
+      <div className="posture-icon">
+        <Icon size={17} />
+      </div>
 
-  return (
+      <div className="posture-copy">
+        <strong>
+          {title}
+        </strong>
 
-    <div className="posture-item">
+        <span>
+          {description}
+        </span>
+      </div>
 
-      <div className="posture-icon">
+      <div className="posture-status">
+        <span className="posture-check">
+          <CheckCircle2 size={13} />
+        </span>
 
-        <Icon size={17} />
-
-      </div>
-
-
-
-      <div className="posture-copy">
-
-        <strong>{title}</strong>
-
-        <span>{description}</span>
-
-      </div>
-
-
-
-      <div className="posture-status">
-
-        <span className="posture-check">
-
-          <CheckCircle2 size={13} />
-
-        </span>
-
-
-
-        {status}
-
-      </div>
-
-    </div>
-
-  );
-
+        {status}
+      </div>
+    </div>
+  );
 }
-
-
 
 export default App;

@@ -15,8 +15,18 @@ import sqlite3
 # DATABASE CONFIGURATION
 # ============================================================
 
+
+import os
+
 BASE_DIR = Path(__file__).resolve().parent
-DATABASE_PATH = BASE_DIR / "a2faas.db"
+
+DATABASE_PATH = Path(
+    os.getenv(
+        "A2FAAS_DATABASE_PATH",
+        str(BASE_DIR / "a2faas.db"),
+    )
+).expanduser()
+
 
 
 # ============================================================
