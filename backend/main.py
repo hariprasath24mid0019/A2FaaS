@@ -14,6 +14,7 @@ from database.database import (
     save_security_event,
     get_security_statistics,
     get_recent_events,
+    _USE_POSTGRES,
 )
 from ml.predict import predict_risk
 from security.feature_extractor import extract_features
@@ -109,7 +110,7 @@ async def startup_event():
     print("A²FaaS BACKEND STARTED")
     print(f"Service     : {APP_NAME}")
     print(f"Version     : {APP_VERSION}")
-    print("Database    : READY")
+    print(f"Database    : {'PostgreSQL' if _USE_POSTGRES else 'SQLite'}")
     print("ML Engine   : READY")
     print("Zero Trust  : READY")
     print("=" * 60)
