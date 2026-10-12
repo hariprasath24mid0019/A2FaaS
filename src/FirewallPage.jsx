@@ -41,6 +41,9 @@ export default function FirewallPage() {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [gatewayResult, setGatewayResult] = useState(null);
+  const [gatewayLoading, setGatewayLoading] = useState(false);
+  const [gatewayError, setGatewayError] = useState("");
 
   const updateField = (field, value) => {
     setForm((current) => ({
@@ -115,10 +118,71 @@ export default function FirewallPage() {
     }
   };
 
+  const accessProtectedDashboard = async () => {
+    setGatewayLoading(true);
+    setGatewayError("");
+    setGatewayResult(null);
+
+    try {
+      const payload = {
+        source_ip: form.source_ip.trim(),
+        method: form.method,
+        path: form.path.trim(),
+        user_agent: form.user_agent.trim(),
+        request_size: Number(form.request_size),
+        request_rate: Number(form.request_rate),
+        identity_verified: Boolean(form.identity_verified),
+        device_trusted: Boolean(form.device_trusted),
+      };
+
+      const response = await fetch(
+        `${API_BASE}/api/gateway/protected-dashboard`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      let data;
+      try {
+        data = await response.json();
+      } catch {
+        throw new Error("The A²FaaS gateway returned an invalid response.");
+      }
+
+      // The API intentionally uses HTTP 403 for CHALLENGE and BLOCK.
+      // Keep those decisions visible as results instead of treating them as
+      // connectivity errors.
+      if (response.ok) {
+        setGatewayResult(data);
+      } else if (response.status === 403 && data?.detail) {
+        setGatewayResult(data.detail);
+      } else {
+        const detail =
+          typeof data?.detail === "string"
+            ? data.detail
+            : data?.detail?.message || "Protected dashboard request failed.";
+        throw new Error(detail);
+      }
+    } catch (err) {
+      console.error("A²FaaS protected gateway error:", err);
+      setGatewayError(
+        err instanceof TypeError
+          ? "Unable to connect to the A²FaaS gateway. Check the backend URL and network connection."
+          : err?.message || "Unable to access the protected dashboard."
+      );
+    } finally {
+      setGatewayLoading(false);
+    }
+  };
+
   const resetAnalyzer = () => {
     setForm(INITIAL_FORM);
     setResult(null);
     setError("");
+    setGatewayResult(null);
+    setGatewayError("");
   };
 
   const getDecisionClass = (decision) => {
@@ -858,6 +922,42 @@ export default function FirewallPage() {
           }
         }
 
+        .firewall-gateway-button {
+          min-width: 170px;
+          min-height: 38px;
+          padding: 0 14px;
+          border: 1px solid #cbd2ff;
+          border-radius: 8px;
+          background: #f2f4ff;
+          color: #4654c5;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          font-size: 9px;
+          font-weight: 800;
+          cursor: pointer;
+        }
+
+        .firewall-gateway-button:hover { background: #e8ebff; }
+        .firewall-gateway-button:disabled { opacity: 0.65; cursor: wait; }
+
+        .gateway-outcome {
+          margin: 16px;
+          padding: 16px;
+          border: 1px solid #e5e9f2;
+          border-radius: 10px;
+          background: #fff;
+        }
+
+        .gateway-outcome.allow { border-color: #d8efdf; background: #f5fcf7; }
+        .gateway-outcome.challenge { border-color: #f1e4c2; background: #fffbf1; }
+        .gateway-outcome.block { border-color: #f0d3d3; background: #fff7f7; }
+        .gateway-outcome h3 { margin: 0 0 7px; font-size: 14px; color: #172033; }
+        .gateway-outcome p { margin: 0 0 10px; color: #667085; font-size: 10px; line-height: 1.5; }
+        .gateway-outcome pre { white-space: pre-wrap; overflow-wrap: anywhere; margin: 10px 0 0; padding: 11px; border-radius: 7px; background: rgba(255,255,255,.8); color: #344054; font-size: 9px; }
+        .gateway-label { display: inline-block; margin-bottom: 8px; font-size: 9px; font-weight: 800; letter-spacing: .6px; }
+
         @media (max-width: 1050px) {
           .firewall-layout {
             grid-template-columns: 1fr;
@@ -1120,6 +1220,25 @@ export default function FirewallPage() {
                   </>
                 )}
               </button>
+
+              <button
+                className="firewall-gateway-button"
+                type="button"
+                onClick={accessProtectedDashboard}
+                disabled={gatewayLoading || loading}
+              >
+                {gatewayLoading ? (
+                  <>
+                    <RefreshCw size={13} className="firewall-spin" />
+                    Checking Access...
+                  </>
+                ) : (
+                  <>
+                    <LockKeyhole size={13} />
+                    Test Protected Access
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </section>
@@ -1349,6 +1468,87 @@ export default function FirewallPage() {
           </div>
         )}
       </div>
+
+      <section className="firewall-card" style={{ marginTop: 15 }}>
+        <div className="firewall-card-header">
+          <div className="firewall-card-title">
+            <div className="firewall-card-icon">
+              <LockKeyhole size={18} />
+            </div>
+            <div>
+              <h2>Protected Dashboard Gateway</h2>
+              <p>Live enforcement test against the deployed protected resource.</p>
+            </div>
+          </div>
+          {gatewayResult && (
+            <div className="firewall-status" style={{
+              borderColor: gatewayResult.firewall_decision === "ALLOW" ? "#d8efdf" : "#f0d3d3",
+              background: gatewayResult.firewall_decision === "ALLOW" ? "#f2fbf5" : "#fff3f3",
+              color: gatewayResult.firewall_decision === "ALLOW" ? "#4d8b67" : "#a65353"
+            }}>
+              {gatewayResult.firewall_decision || gatewayResult.access || "RESULT"}
+            </div>
+          )}
+        </div>
+
+        {gatewayError && (
+          <div className="firewall-error" style={{ margin: 16 }}>
+            <AlertTriangle size={15} />
+            <span>{gatewayError}</span>
+          </div>
+        )}
+
+        {!gatewayResult ? (
+          <div className="result-empty" style={{ minHeight: 140 }}>
+            <div className="result-empty-icon"><LockKeyhole size={21} /></div>
+            <strong>No protected access test yet</strong>
+            <span>Use “Test Protected Access” to submit the current request context to the live gateway.</span>
+          </div>
+        ) : (
+          <div className={`gateway-outcome ${
+            gatewayResult.firewall_decision === "ALLOW" ? "allow" :
+            gatewayResult.firewall_decision === "CHALLENGE" ? "challenge" : "block"
+          }`}>
+            <span className="gateway-label">
+              {gatewayResult.firewall_decision === "ALLOW" || gatewayResult.access === "GRANTED"
+                ? "ACCESS GRANTED"
+                : gatewayResult.firewall_decision === "CHALLENGE" || gatewayResult.access === "CHALLENGE"
+                  ? "VERIFICATION REQUIRED"
+                  : "ACCESS DENIED"}
+            </span>
+            <h3>{gatewayResult.message || "Gateway decision received"}</h3>
+            <p>
+              Decision: <strong>{gatewayResult.firewall_decision || gatewayResult.access || "UNKNOWN"}</strong>
+              {gatewayResult.risk_level ? <> · Risk: <strong>{gatewayResult.risk_level}</strong></> : null}
+              {gatewayResult.risk_score !== undefined ? <> · Score: <strong>{gatewayResult.risk_score}</strong></> : null}
+            </p>
+
+            {gatewayResult.protected_resource && (
+              <div>
+                <h3>{gatewayResult.protected_resource.name}</h3>
+                <p>
+                  Classification: <strong>{gatewayResult.protected_resource.classification}</strong>
+                </p>
+                <pre>{JSON.stringify(gatewayResult.protected_resource.data, null, 2)}</pre>
+              </div>
+            )}
+
+            {Array.isArray(gatewayResult.reasons) && gatewayResult.reasons.length > 0 && (
+              <div>
+                <p><strong>Decision reasons</strong></p>
+                <ul style={{ margin: 0, paddingLeft: 18, color: "#667085", fontSize: 10, lineHeight: 1.6 }}>
+                  {gatewayResult.reasons.map((reason, index) => <li key={`${index}-${reason}`}>{reason}</li>)}
+                </ul>
+              </div>
+            )}
+
+            {gatewayResult.zero_trust_reason && <p style={{ marginTop: 10 }}>{gatewayResult.zero_trust_reason}</p>}
+            <div className="result-request-id">
+              <strong>Request ID:</strong> {gatewayResult.request_id || "N/A"}
+            </div>
+          </div>
+        )}
+      </section>
     </div>
   );
 }
