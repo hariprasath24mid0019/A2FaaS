@@ -635,17 +635,11 @@ async def protected_dashboard_gateway(
         str(uuid.uuid4()),
     )
 
-    # Score the request as access to this protected resource, rather than
-    # trusting a caller-supplied path or HTTP method.
-    protected_payload = payload.copy(
-        update={
-            "method": "GET",
-            "path": "/protected/dashboard",
-        }
-    )
-
+    # Evaluate the submitted traffic attributes. Do not overwrite the
+    # method or path: doing so would hide suspicious signals (for example,
+    # POST /admin/login) from the risk engine.
     result = await _evaluate_firewall_request(
-        protected_payload,
+        payload,
         request_id,
     )
 
