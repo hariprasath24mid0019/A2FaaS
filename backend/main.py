@@ -467,11 +467,20 @@ async def _evaluate_firewall_request(
                 "Known security scanning tool signature detected"
             )
 
+       
         # ----------------------------------------------------
         # 8. Final firewall policy
         # ----------------------------------------------------
 
-        if risk_level == "HIGH":
+        if zero_trust_decision == "BLOCK":
+            decision = "BLOCK"
+            zero_trust_status = "FAILED"
+
+            reasons.append(
+                "Zero Trust policy explicitly blocked the request"
+            )
+
+        elif risk_level == "HIGH":
             decision = "BLOCK"
             zero_trust_status = "FAILED"
 
