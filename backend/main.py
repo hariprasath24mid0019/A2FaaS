@@ -14,7 +14,6 @@ from database.database import (
     save_security_event,
     get_security_statistics,
     get_recent_events,
-    _USE_POSTGRES,
 )
 from ml.predict import predict_risk
 from security.feature_extractor import extract_features
@@ -110,7 +109,7 @@ async def startup_event():
     print("A²FaaS BACKEND STARTED")
     print(f"Service     : {APP_NAME}")
     print(f"Version     : {APP_VERSION}")
-    print(f"Database    : {'PostgreSQL' if _USE_POSTGRES else 'SQLite'}")
+    print("Database    : READY")
     print("ML Engine   : READY")
     print("Zero Trust  : READY")
     print("=" * 60)
@@ -310,17 +309,11 @@ def calculate_behavioral_risk(
 # FIREWALL ANALYSIS
 # ============================================================
 
-@app.post("/api/firewall/analyze")
-async def analyze_firewall_request(
+async def _evaluate_firewall_request(
     payload: FirewallRequest,
-    request: Request,
+    request_id: str,
 ):
-    request_id = getattr(
-        request.state,
-        "request_id",
-        str(uuid.uuid4()),
-    )
-
+    """Run the security pipeline once and persist one security event."""
     try:
         # ----------------------------------------------------
         # 1. Feature extraction
@@ -602,6 +595,109 @@ async def analyze_firewall_request(
                 "error": str(exc),
             },
         )
+
+
+# ============================================================
+# FIREWALL ANALYSIS API
+# ============================================================
+
+@app.post("/api/firewall/analyze")
+async def analyze_firewall_request(
+    payload: FirewallRequest,
+    request: Request,
+):
+    """Analyze a request and return the firewall decision."""
+    request_id = getattr(
+        request.state,
+        "request_id",
+        str(uuid.uuid4()),
+    )
+    return await _evaluate_firewall_request(payload, request_id)
+
+
+# ============================================================
+# ENFORCED PROTECTED DEMO APPLICATION
+# ============================================================
+
+@app.post("/api/gateway/protected-dashboard")
+async def protected_dashboard_gateway(
+    payload: FirewallRequest,
+    request: Request,
+):
+    """Evaluate a request and enforce the decision for a demo resource.
+
+    This endpoint demonstrates application-level enforcement for the A²FaaS
+    protected dashboard. It is not a general-purpose reverse proxy.
+    """
+    request_id = getattr(
+        request.state,
+        "request_id",
+        str(uuid.uuid4()),
+    )
+
+    # Score the request as access to this protected resource, rather than
+    # trusting a caller-supplied path or HTTP method.
+    protected_payload = payload.copy(
+        update={
+            "method": "GET",
+            "path": "/protected/dashboard",
+        }
+    )
+
+    result = await _evaluate_firewall_request(
+        protected_payload,
+        request_id,
+    )
+
+    decision = result.get("decision", "BLOCK")
+
+    if decision == "ALLOW":
+        return {
+            "access": "GRANTED",
+            "message": "Protected dashboard access granted by A²FaaS",
+            "request_id": request_id,
+            "firewall_decision": decision,
+            "protected_resource": {
+                "name": "A²FaaS Demo Dashboard",
+                "classification": "PROTECTED",
+                "data": {
+                    "service_status": "operational",
+                    "message": "This sample content is only returned after ALLOW.",
+                    "sample_records": 3,
+                },
+            },
+            "security": {
+                "risk_score": result.get("risk_score"),
+                "risk_level": result.get("risk_level"),
+                "zero_trust_status": result.get("zero_trust_status"),
+            },
+        }
+
+    if decision == "CHALLENGE":
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "access": "CHALLENGE",
+                "message": "Verification is required before accessing the protected dashboard.",
+                "request_id": request_id,
+                "firewall_decision": decision,
+                "zero_trust_reason": result.get("zero_trust_reason"),
+                "reasons": result.get("reasons", []),
+            },
+        )
+
+    raise HTTPException(
+        status_code=403,
+        detail={
+            "access": "DENIED",
+            "message": "A²FaaS blocked access to the protected dashboard.",
+            "request_id": request_id,
+            "firewall_decision": "BLOCK",
+            "risk_score": result.get("risk_score"),
+            "risk_level": result.get("risk_level"),
+            "reasons": result.get("reasons", []),
+        },
+    )
 
 
 # ============================================================
