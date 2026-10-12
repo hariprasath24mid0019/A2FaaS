@@ -3166,3 +3166,83 @@ button {
   }
 }
 
+
+/* FIX: Overview dashboard cards use dashboard-card/card-header */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(280px, 1fr);
+  gap: 16px;
+  align-items: stretch;
+  margin-bottom: 18px;
+}
+
+.dashboard-card {
+  min-width: 0;
+  padding: 18px;
+  background: #fff;
+  border: 1px solid var(--border, #e7ebf3);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(25, 35, 60, 0.03);
+}
+
+.dashboard-card .card-header {
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.dashboard-card .card-header h2 {
+  margin: 4px 0 0;
+  font-size: 18px;
+  line-height: 1.3;
+}
+
+.dashboard-card .card-eyebrow {
+  font-size: 10px;
+  line-height: 1.4;
+  letter-spacing: 1px;
+}
+
+.dashboard-card .activity-chart {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 10px;
+  min-height: 260px;
+  width: 100%;
+}
+
+.dashboard-card .chart-area {
+  height: 260px;
+  width: 100%;
+  min-width: 0;
+  position: relative;
+}
+
+.dashboard-card .chart-bars {
+  display: grid;
+  grid-template-columns: repeat(9, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.dashboard-card .decision-content {
+  width: 100%;
+  min-width: 0;
+}
+
+.lower-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(280px, 1fr);
+  gap: 16px;
+  align-items: stretch;
+}
+
+@media (max-width: 900px) {
+  .dashboard-grid,
+  .lower-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
