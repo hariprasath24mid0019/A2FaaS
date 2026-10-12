@@ -22,3 +22,21 @@ body {
   width: 100%;
   min-height: 100vh;
 }
+/* A²FaaS — Security Decisions spacing fix */
+.decision-content .decision-total {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 12px 16px;
+}
+
+.decision-content .decision-total strong {
+  line-height: 1.4;
+  margin: 0;
+}
+
+.decision-content .decision-total span {
+  line-height: 1.4;
+  margin: 0;
+}
